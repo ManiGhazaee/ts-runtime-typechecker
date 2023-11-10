@@ -2,7 +2,7 @@ interface MyInt {
     _1: "value";
     _2: number | string;
     _3:
-        | number
+        | [number, string]
         | {
               _4: number;
               _5:
@@ -15,6 +15,7 @@ interface MyInt {
           }
         | { _10: boolean };
     _11: AnotherType;
+    _12: Array<string | null> | object[];
 }
 
 interface AnotherType {

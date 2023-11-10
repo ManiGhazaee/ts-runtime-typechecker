@@ -8,24 +8,13 @@ pub enum Token {
     Undefined(String),
     Type(Type),
     Key(String),
-    // Tuple(Vec<Token>),
     EndOfEntry,
     Interface,
     Export,
     Colon,
-    Comma,
-    // Semi,
     Eq,
     Slash,
     Comment,
-    LPar,
-    RPar,
-    LBrack,
-    RBrack,
-    LBrace,
-    RBrace,
-    Greater,
-    Less,
     EOF,
 }
 
@@ -34,6 +23,7 @@ pub enum Type {
     Custom(String),
     Oper(Oper),
     StringLit(String),
+    Punct(Punct),
     True,
     False,
     String,
@@ -50,6 +40,19 @@ pub enum Type {
 pub enum Oper {
     And,
     Or,
+}
+
+#[derive(Debug, Clone)]
+pub enum Punct {
+    LBrace,
+    RBrace,
+    LBrack,
+    RBrack,
+    LPar,
+    RPar,
+    Comma,
+    Less,
+    Greater,
 }
 
 pub fn is_skippable(char: &char) -> bool {
@@ -105,16 +108,16 @@ pub fn tokenize(src: String) -> Vec<Token> {
             '&' => Token::Type(Type::Oper(Oper::And)),
             '|' => Token::Type(Type::Oper(Oper::Or)),
             // ';' => Token::Semi,
-            '<' => Token::Less,
-            '>' => Token::Greater,
+            '<' => Token::Type(Type::Punct(Punct::Less)),
+            '>' => Token::Type(Type::Punct(Punct::Greater)),
+            ',' => Token::Type(Type::Punct(Punct::Comma)),
+            '(' => Token::Type(Type::Punct(Punct::LPar)),
+            ')' => Token::Type(Type::Punct(Punct::RPar)),
+            '[' => Token::Type(Type::Punct(Punct::LBrack)),
+            ']' => Token::Type(Type::Punct(Punct::RBrack)),
+            '{' => Token::Type(Type::Punct(Punct::LBrace)),
+            '}' => Token::Type(Type::Punct(Punct::RBrace)),
             ':' => Token::Colon,
-            ',' => Token::Comma,
-            '(' => Token::LPar,
-            ')' => Token::RPar,
-            '[' => Token::LBrack,
-            ']' => Token::RBrack,
-            '{' => Token::LBrace,
-            '}' => Token::RBrace,
             '=' => Token::Eq,
             _ => {
                 if c.is_alphabetic() || c == '_' {
