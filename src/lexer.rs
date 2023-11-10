@@ -1,28 +1,20 @@
 use crate::next;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Token {
     Id(String),
     Number(usize),
     String(String),
+    Undefined(String),
+    Type(Type),
+    Key(String),
+    // Tuple(Vec<Token>),
+    EndOfEntry,
     Interface,
-    Type,
     Export,
-    TrueType,
-    FalseType,
-    StringType,
-    NumberType,
-    ObjectType,
-    ArrayType,
-    BooleanType,
-    NullType,
-    UndefinedType,
-    AnyType,
-    Pipe,
     Colon,
     Comma,
-    Amper,
-    Semi,
+    // Semi,
     Eq,
     Slash,
     Comment,
@@ -32,10 +24,32 @@ pub enum Token {
     RBrack,
     LBrace,
     RBrace,
-    EOF,
     Greater,
     Less,
-    Undefined(String),
+    EOF,
+}
+
+#[derive(Debug, Clone)]
+pub enum Type {
+    Custom(String),
+    Oper(Oper),
+    StringLit(String),
+    True,
+    False,
+    String,
+    Number,
+    Object,
+    Array,
+    Boolean,
+    Null,
+    Undefined,
+    Any,
+}
+
+#[derive(Debug, Clone)]
+pub enum Oper {
+    And,
+    Or,
 }
 
 pub fn is_skippable(char: &char) -> bool {
@@ -88,13 +102,13 @@ pub fn tokenize(src: String) -> Vec<Token> {
                 i = j;
                 Token::String(string)
             }
-            ';' => Token::Semi,
+            '&' => Token::Type(Type::Oper(Oper::And)),
+            '|' => Token::Type(Type::Oper(Oper::Or)),
+            // ';' => Token::Semi,
             '<' => Token::Less,
             '>' => Token::Greater,
-            '|' => Token::Pipe,
             ':' => Token::Colon,
             ',' => Token::Comma,
-            '&' => Token::Amper,
             '(' => Token::LPar,
             ')' => Token::RPar,
             '[' => Token::LBrack,
@@ -103,11 +117,11 @@ pub fn tokenize(src: String) -> Vec<Token> {
             '}' => Token::RBrace,
             '=' => Token::Eq,
             _ => {
-                if c.is_alphabetic() {
+                if c.is_alphabetic() || c == '_' {
                     let mut _c = c;
                     let mut temp: String = String::new();
                     let mut j: usize = i;
-                    while !is_skippable(&_c) && _c.is_alphanumeric() {
+                    while (!is_skippable(&_c) && _c.is_alphanumeric()) || _c == '_' {
                         temp += _c.to_string().as_str();
                         j += 1;
                         if j == src_vec_len {
@@ -117,19 +131,18 @@ pub fn tokenize(src: String) -> Vec<Token> {
                     }
                     i = j - 1;
                     match temp.as_str() {
-                        "true" => Token::TrueType,
-                        "false" => Token::FalseType,
                         "interface" => Token::Interface,
-                        "type" => Token::Type,
                         "export" => Token::Export,
-                        "string" => Token::StringType,
-                        "number" => Token::NumberType,
-                        "object" => Token::ObjectType,
-                        "Array" => Token::ArrayType,
-                        "boolean" => Token::BooleanType,
-                        "null" => Token::NullType,
-                        "undefined" => Token::UndefinedType,
-                        "any" => Token::AnyType,
+                        "true" => Token::Type(Type::True),
+                        "false" => Token::Type(Type::False),
+                        "string" => Token::Type(Type::String),
+                        "number" => Token::Type(Type::Number),
+                        "object" => Token::Type(Type::Object),
+                        "Array" => Token::Type(Type::Array),
+                        "boolean" => Token::Type(Type::Boolean),
+                        "null" => Token::Type(Type::Null),
+                        "undefined" => Token::Type(Type::Undefined),
+                        "any" => Token::Type(Type::Any),
                         _ => Token::Id(temp),
                     }
                 } else if c.is_numeric() {
