@@ -1,8 +1,8 @@
 interface MyInt {
     _1: "value";
-    _2: number | string;
+    _2: (number | string)[];
     _3:
-        | [number, string]
+        | number
         | {
               _4: number;
               _5:
@@ -16,8 +16,9 @@ interface MyInt {
         | { _10: boolean };
     _11: AnotherType;
     _12: Array<string | null> | object[];
+    _13: Array<string>[];
 }
 
 interface AnotherType {
-    boo: "bar";
+    key_2: string | { key_3: object };
 }

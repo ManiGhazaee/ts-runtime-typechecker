@@ -1,12 +1,11 @@
-use inter_parser::{all_entries_value_walk, parse_arrays, parse_interfaces};
-use lexer::tokenize;
+use crate::inter_parser::{all_entries_value_walk, parse_arrays, parse_generics, parse_interfaces};
+use crate::lexer::tokenize;
 use std::{env, error::Error, fs};
-
-use crate::inter_parser::parse_generics;
 
 mod inter_parser;
 mod lexer;
 mod macros;
+mod tests;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let args: Vec<String> = env::args().collect();
@@ -17,13 +16,11 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let mut interfaces = parse_interfaces(tokens);
     println!("{:#?}", interfaces);
-
-    for i in interfaces.iter_mut() {
-        all_entries_value_walk(i, parse_arrays);
-    }
-
     for i in interfaces.iter_mut() {
         all_entries_value_walk(i, parse_generics);
+    }
+    for i in interfaces.iter_mut() {
+        all_entries_value_walk(i, parse_arrays);
     }
 
     println!("------------------------------------");

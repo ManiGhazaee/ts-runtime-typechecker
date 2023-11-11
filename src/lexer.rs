@@ -1,6 +1,7 @@
 use crate::next;
 
 #[derive(Debug, Clone)]
+#[derive(PartialEq)]
 pub enum Token {
     Id(String),
     Number(usize),
@@ -19,6 +20,7 @@ pub enum Token {
 }
 
 #[derive(Debug, Clone)]
+#[derive(PartialEq)]
 pub enum Type {
     Custom(String),
     Oper(Oper),
@@ -36,12 +38,14 @@ pub enum Type {
 }
 
 #[derive(Debug, Clone)]
+#[derive(PartialEq)]
 pub enum Oper {
     And,
     Or,
 }
 
 #[derive(Debug, Clone)]
+#[derive(PartialEq)]
 pub enum Punct {
     LBrace,
     RBrace,

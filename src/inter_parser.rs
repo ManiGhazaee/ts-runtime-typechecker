@@ -1,6 +1,6 @@
 use crate::lexer::{Punct, Token, Type};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum EValue {
     Entry(Entry),
     Type(Type),
@@ -8,33 +8,33 @@ pub enum EValue {
     Tuple(Tuple),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum EKey {
     Name(String),
     None,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum GenericName {
     Custom(String),
     Array,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Generic {
-    name: GenericName,
-    args: Vec<EValue>,
+    pub name: GenericName,
+    pub args: Vec<EValue>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Tuple {
     elems: Vec<EValue>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Entry {
-    key: EKey,
-    value: Vec<EValue>,
+    pub key: EKey,
+    pub value: Vec<EValue>,
 }
 
 fn stack_handle_remove(stack: &mut Vec<Entry>) -> () {
@@ -183,7 +183,6 @@ pub fn parse_arrays(value: &mut Vec<EValue>) -> () {
             &EValue::Type(Type::Punct(Punct::RBrack)),
         ) = (&value[i], &value[i + 1])
         {
-            println!("matched: {}", i);
             let end = i + 1;
             let start: usize;
             let mut j = i - 1;
@@ -192,16 +191,33 @@ pub fn parse_arrays(value: &mut Vec<EValue>) -> () {
             loop {
                 match &value[j] {
                     EValue::Type(Type::Punct(Punct::RPar)) => par_count += 1,
-                    EValue::Type(Type::Punct(Punct::LPar)) => par_count -= 1,
-                    t => {
-                        args.push(t.clone());
+                    EValue::Type(Type::Punct(Punct::LPar)) => {
+                        par_count -= 1;
                         if par_count == 0 && args.len() > 0 {
                             start = j;
+                            args.reverse();
                             value.splice(
                                 start..=end,
                                 [EValue::Generic(Generic {
                                     name: GenericName::Array,
-                                    args: args.clone(),
+                                    args,
+                                })],
+                            );
+                            break;
+                        } else if par_count == 0 && args.len() == 0 {
+                            panic!("unexpected EValue before []");
+                        }
+                    }
+                    t => {
+                        args.push(t.clone());
+                        if par_count == 0 && args.len() > 0 {
+                            start = j;
+                            args.reverse();
+                            value.splice(
+                                start..=end,
+                                [EValue::Generic(Generic {
+                                    name: GenericName::Array,
+                                    args,
                                 })],
                             );
                             break;
@@ -258,6 +274,45 @@ pub fn parse_generics(value: &mut Vec<EValue>) -> () {
                 }
                 j += 1;
             }
+        }
+        i += 1;
+    }
+}
+
+#[allow(dead_code)]
+#[allow(unused)]
+pub fn parse_tuples(value: &mut Vec<EValue>) -> () {
+    let mut i = 0;
+    while i < value.len() - 1 {
+        match value[i] {
+            EValue::Type(Type::Punct(Punct::LBrack)) => {
+                if let EValue::Type(Type::Punct(Punct::RBrack)) = value[i + 1] {
+                    continue;
+                }
+                let start = i - 1;
+                let end: usize;
+                let mut count = 1;
+                let mut j = i + 1;
+                let mut elems: Vec<EValue> = Vec::new();
+                while j < value.len() {
+                    match value[j] {
+                        EValue::Type(Type::Punct(Punct::LBrack)) => count += 1,
+                        EValue::Type(Type::Punct(Punct::RBrack)) => {
+                            count -= 1;
+                            if count == 0 && elems.len() > 0 {
+                                end = j;
+
+                                break;
+                            } else if count == 0 && elems.len() == 0 {
+                                panic!("why?");
+                            }
+                        }
+                        _ => (),
+                    }
+                    j += 1;
+                }
+            }
+            _ => (),
         }
         i += 1;
     }
