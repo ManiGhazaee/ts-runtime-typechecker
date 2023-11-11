@@ -1,4 +1,4 @@
-use inter_parser::parse_interfaces;
+use inter_parser::{do_to_all_values, parse_arrays, parse_interfaces};
 use lexer::tokenize;
 use std::{env, error::Error, fs};
 
@@ -13,7 +13,13 @@ fn main() -> Result<(), Box<dyn Error>> {
     let tokens = tokenize(src);
     println!("{:?}", tokens);
 
-    let interfaces = parse_interfaces(tokens);
+    let mut interfaces = parse_interfaces(tokens);
+    println!("{:#?}", interfaces);
+
+    for i in interfaces.iter_mut() {
+        do_to_all_values(i, parse_arrays);
+    }
+    println!("------------------------------------");
     println!("{:#?}", interfaces);
 
     Ok(())

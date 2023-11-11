@@ -1,4 +1,6 @@
-use crate::lexer::{Type, Token, Punct};
+use std::{clone, collections::btree_map::Values};
+
+use crate::lexer::{Punct, Token, Type};
 
 #[derive(Debug, Clone)]
 pub enum EValue {
@@ -15,9 +17,15 @@ pub enum EKey {
 }
 
 #[derive(Debug, Clone)]
+pub enum GenericName {
+    Custom(String),
+    Array,
+}
+
+#[derive(Debug, Clone)]
 pub struct Generic {
-    name: String,
-    args: Vec<Type>,
+    name: GenericName,
+    args: Vec<EValue>,
 }
 
 #[derive(Debug, Clone)]
@@ -163,8 +171,63 @@ pub fn parse_interfaces(mut tokens: Vec<Token>) -> Vec<Entry> {
         interfaces.push(stack[0].clone());
         stack.pop();
     } else {
-        panic!("stack length > 1 | < 1");
+        panic!("stack length != 1");
     }
 
     interfaces
+}
+
+pub fn parse_arrays(value: &mut Vec<EValue>) -> () {
+    let mut i = 0;
+    while i < value.len() - 1 {
+        if let (
+            &EValue::Type(Type::Punct(Punct::LBrack)),
+            &EValue::Type(Type::Punct(Punct::RBrack)),
+        ) = (&value[i], &value[i + 1])
+        {
+            println!("matched: {}", i);
+            let end = i + 1;
+            let start: usize;
+            let mut j = i - 1;
+            let mut par_count = 0;
+            let mut args: Vec<EValue> = Vec::new();
+            loop {
+                match &value[j] {
+                    EValue::Type(Type::Punct(Punct::RPar)) => {
+                        par_count += 1;
+                    }
+                    EValue::Type(Type::Punct(Punct::LPar)) => {
+                        par_count -= 1;
+                    }
+                    t => {
+                        args.push(t.clone());
+                        if par_count == 0 && args.len() > 0 {
+                            start = j;
+                            value.splice(
+                                start..=end,
+                                [EValue::Generic(Generic {
+                                    name: GenericName::Array,
+                                    args: args.clone(),
+                                })],
+                            );
+                            break;
+                        } else if par_count == 0 && args.len() == 0 {
+                            panic!("unexpected Evalue before []");
+                        }
+                    }
+                }
+                j -= 1;
+            }
+        }
+        i += 1;
+    }
+}
+
+pub fn do_to_all_values(entry: &mut Entry, f: fn(value: &mut Vec<EValue>)) {
+    (f)(&mut entry.value);
+    for j in &mut entry.value {
+        if let EValue::Entry(e) = j {
+            do_to_all_values(e, f);
+        }
+    }
 }

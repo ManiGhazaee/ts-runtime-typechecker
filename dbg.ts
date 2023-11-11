@@ -8,7 +8,7 @@ interface MyInt {
               _5:
                   | string
                   | {
-                        _6: { _7: "string" };
+                        _6: { _7: "string" }[];
                     };
               _8: object;
               _9: "object";
