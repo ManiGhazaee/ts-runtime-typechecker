@@ -1,5 +1,3 @@
-use std::{clone, collections::btree_map::Values};
-
 use crate::lexer::{Punct, Token, Type};
 
 #[derive(Debug, Clone)]
@@ -193,12 +191,8 @@ pub fn parse_arrays(value: &mut Vec<EValue>) -> () {
             let mut args: Vec<EValue> = Vec::new();
             loop {
                 match &value[j] {
-                    EValue::Type(Type::Punct(Punct::RPar)) => {
-                        par_count += 1;
-                    }
-                    EValue::Type(Type::Punct(Punct::LPar)) => {
-                        par_count -= 1;
-                    }
+                    EValue::Type(Type::Punct(Punct::RPar)) => par_count += 1,
+                    EValue::Type(Type::Punct(Punct::LPar)) => par_count -= 1,
                     t => {
                         args.push(t.clone());
                         if par_count == 0 && args.len() > 0 {
@@ -212,7 +206,7 @@ pub fn parse_arrays(value: &mut Vec<EValue>) -> () {
                             );
                             break;
                         } else if par_count == 0 && args.len() == 0 {
-                            panic!("unexpected Evalue before []");
+                            panic!("unexpected EValue before []");
                         }
                     }
                 }
@@ -223,11 +217,57 @@ pub fn parse_arrays(value: &mut Vec<EValue>) -> () {
     }
 }
 
-pub fn do_to_all_values(entry: &mut Entry, f: fn(value: &mut Vec<EValue>)) {
+pub fn parse_generics(value: &mut Vec<EValue>) -> () {
+    let mut i = 1;
+    while i < value.len() {
+        if let &EValue::Type(Type::Punct(Punct::Less)) = &value[i] {
+            let generic_name: GenericName = match &value[i - 1] {
+                EValue::Type(Type::Custom(str)) => match str.clone().as_str() {
+                    "Array" => GenericName::Array,
+                    _ => GenericName::Custom(str.clone()),
+                },
+                _ => panic!("unexpected generic name"),
+            };
+            let start = i - 1;
+            let end: usize;
+            let mut j = i + 1;
+            let mut args: Vec<EValue> = Vec::new();
+            let mut count = 1;
+            while j < value.len() {
+                match &value[j] {
+                    EValue::Type(Type::Punct(Punct::Less)) => count += 1,
+                    EValue::Type(Type::Punct(Punct::Greater)) => {
+                        count -= 1;
+                        if count == 0 && args.len() > 0 {
+                            end = j;
+                            value.splice(
+                                start..=end,
+                                [EValue::Generic(Generic {
+                                    name: generic_name,
+                                    args: args.clone(),
+                                })],
+                            );
+                            break;
+                        } else if count == 0 && args.len() == 0 {
+                            panic!("why?");
+                        }
+                    }
+                    t => {
+                        args.push(t.clone());
+                    }
+                }
+                j += 1;
+            }
+        }
+        i += 1;
+    }
+}
+
+pub fn all_entries_value_walk(entry: &mut Entry, f: fn(value: &mut Vec<EValue>)) {
     (f)(&mut entry.value);
     for j in &mut entry.value {
         if let EValue::Entry(e) = j {
-            do_to_all_values(e, f);
+            all_entries_value_walk(e, f);
         }
     }
 }

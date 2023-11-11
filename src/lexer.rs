@@ -29,7 +29,6 @@ pub enum Type {
     String,
     Number,
     Object,
-    Array,
     Boolean,
     Null,
     Undefined,
@@ -107,7 +106,6 @@ pub fn tokenize(src: String) -> Vec<Token> {
             }
             '&' => Token::Type(Type::Oper(Oper::And)),
             '|' => Token::Type(Type::Oper(Oper::Or)),
-            // ';' => Token::Semi,
             '<' => Token::Type(Type::Punct(Punct::Less)),
             '>' => Token::Type(Type::Punct(Punct::Greater)),
             ',' => Token::Type(Type::Punct(Punct::Comma)),
@@ -141,7 +139,6 @@ pub fn tokenize(src: String) -> Vec<Token> {
                         "string" => Token::Type(Type::String),
                         "number" => Token::Type(Type::Number),
                         "object" => Token::Type(Type::Object),
-                        "Array" => Token::Type(Type::Array),
                         "boolean" => Token::Type(Type::Boolean),
                         "null" => Token::Type(Type::Null),
                         "undefined" => Token::Type(Type::Undefined),

@@ -1,6 +1,8 @@
-use inter_parser::{do_to_all_values, parse_arrays, parse_interfaces};
+use inter_parser::{all_entries_value_walk, parse_arrays, parse_interfaces};
 use lexer::tokenize;
 use std::{env, error::Error, fs};
+
+use crate::inter_parser::parse_generics;
 
 mod inter_parser;
 mod lexer;
@@ -17,8 +19,13 @@ fn main() -> Result<(), Box<dyn Error>> {
     println!("{:#?}", interfaces);
 
     for i in interfaces.iter_mut() {
-        do_to_all_values(i, parse_arrays);
+        all_entries_value_walk(i, parse_arrays);
     }
+
+    for i in interfaces.iter_mut() {
+        all_entries_value_walk(i, parse_generics);
+    }
+
     println!("------------------------------------");
     println!("{:#?}", interfaces);
 
