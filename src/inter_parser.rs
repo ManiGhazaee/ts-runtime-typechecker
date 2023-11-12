@@ -4,13 +4,13 @@ use crate::lexer::{Punct, Token, Type};
 pub enum EValue {
     Entry(Entry),
     Type(Type),
-    Generic(Generic),
-    Tuple(Tuple),
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum EKey {
     Name(String),
+    GenericName(GenericName),
+    Tuple,
     None,
 }
 
@@ -18,12 +18,6 @@ pub enum EKey {
 pub enum GenericName {
     Custom(String),
     Array,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct Generic {
-    pub name: GenericName,
-    pub args: Vec<EValue>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -198,9 +192,9 @@ pub fn parse_arrays(value: &mut Vec<EValue>) -> () {
                             args.reverse();
                             value.splice(
                                 start..=end,
-                                [EValue::Generic(Generic {
-                                    name: GenericName::Array,
-                                    args,
+                                [EValue::Entry(Entry {
+                                    key: EKey::GenericName(GenericName::Array),
+                                    value: args,
                                 })],
                             );
                             break;
@@ -215,9 +209,9 @@ pub fn parse_arrays(value: &mut Vec<EValue>) -> () {
                             args.reverse();
                             value.splice(
                                 start..=end,
-                                [EValue::Generic(Generic {
-                                    name: GenericName::Array,
-                                    args,
+                                [EValue::Entry(Entry {
+                                    key: EKey::GenericName(GenericName::Array),
+                                    value: args,
                                 })],
                             );
                             break;
@@ -258,9 +252,9 @@ pub fn parse_generics(value: &mut Vec<EValue>) -> () {
                             end = j;
                             value.splice(
                                 start..=end,
-                                [EValue::Generic(Generic {
-                                    name: generic_name,
-                                    args: args.clone(),
+                                [EValue::Entry(Entry {
+                                    key: EKey::GenericName(generic_name),
+                                    value: args.clone(),
                                 })],
                             );
                             break;
@@ -318,11 +312,11 @@ pub fn parse_tuples(value: &mut Vec<EValue>) -> () {
     }
 }
 
-pub fn all_entries_value_walk(entry: &mut Entry, f: fn(value: &mut Vec<EValue>)) {
+pub fn value_walk(entry: &mut Entry, f: fn(value: &mut Vec<EValue>)) {
     (f)(&mut entry.value);
     for j in &mut entry.value {
         if let EValue::Entry(e) = j {
-            all_entries_value_walk(e, f);
+            value_walk(e, f);
         }
     }
 }

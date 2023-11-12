@@ -5,7 +5,8 @@ export interface MyInt {
     "foo bar": object;
     other: MyOtherType;
     oof: (number | string)[];
-    rab: MyOtherType & string;
+    rab: MyOtherType;
+    baz: string | { boo: "far" };
 }
 
 export type MyOtherType = {
@@ -19,11 +20,13 @@ export function is_interface_MyInt(obj: unknown): obj is MyInt {
         "foo" in obj &&
         typeof obj.foo === "string" &&
         "bar" in obj &&
-        (typeof obj.bar === "number" || typeof obj.bar === "string") &&
+        (typeof obj["bar"] === "number" || typeof obj.bar === "string") &&
         "foo bar" in obj &&
         typeof "foo bar" === "object" &&
         "other" in obj &&
-        is_type_MyOtherType(obj.other)
+        is_type_MyOtherType(obj.other) &&
+        "baz" in obj &&
+        (typeof obj.baz === "string" || typeof obj.baz === "object"&& obj.baz != null && "boo" in obj.baz && obj.baz.boo === "foo") 
     );
 }
 

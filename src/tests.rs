@@ -3,10 +3,10 @@ fn _test_(src: &str) -> Vec<Entry> {
     let tokens = tokenize(src.to_string());
     let mut interfaces = parse_interfaces(tokens);
     for i in interfaces.iter_mut() {
-        all_entries_value_walk(i, parse_generics);
+        value_walk(i, parse_generics);
     }
     for i in interfaces.iter_mut() {
-        all_entries_value_walk(i, parse_arrays);
+        value_walk(i, parse_arrays);
     }
     return interfaces;
 }
@@ -73,9 +73,9 @@ mod tests {
             key: EKey::Name("inter".to_string()),
             value: vec![EValue::Entry(Entry {
                 key: EKey::Name("_1".to_string()),
-                value: vec![EValue::Generic(Generic {
-                    name: GenericName::Array,
-                    args: vec![EValue::Type(Type::Number)],
+                value: vec![EValue::Entry(Entry {
+                    key: EKey::GenericName(GenericName::Array),
+                    value: vec![EValue::Type(Type::Number)],
                 })],
             })],
         }];
@@ -90,9 +90,9 @@ mod tests {
             key: EKey::Name("inter".to_string()),
             value: vec![EValue::Entry(Entry {
                 key: EKey::Name("_1".to_string()),
-                value: vec![EValue::Generic(Generic {
-                    name: GenericName::Array,
-                    args: vec![
+                value: vec![EValue::Entry(Entry {
+                    key: EKey::GenericName(GenericName::Array),
+                    value: vec![
                         EValue::Type(Type::Number),
                         EValue::Type(Type::Oper(Oper::Or)),
                         EValue::Type(Type::String),
@@ -101,5 +101,6 @@ mod tests {
             })],
         }];
         assert_eq!(_test_(raw), exp);
+
     }
 }
