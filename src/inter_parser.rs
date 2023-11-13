@@ -317,7 +317,7 @@ pub fn parse_tuples(value: &mut Vec<EValue>) -> () {
 type Addr = Vec<String>;
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum JSTypes {
+pub enum JSType {
     String,
     Number,
     Function,
@@ -338,14 +338,14 @@ pub enum JSValue {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum TCToken {
-    Typeof(Addr, JSTypes),
+    Typeof(Addr, JSType),
     StringLit(Addr, String),
     IsArray(Addr),
     IsEqTo(Addr, JSValue),
     IsEqEqTo(Addr, JSValue),
     IsNotEqTo(Addr, JSValue),
     IsNotEqEqTo(Addr, JSValue),
-    Array(Addr, JSTypes),
+    Array(Addr, JSType),
     And,
     Or,
 }
@@ -355,7 +355,7 @@ pub fn to_tctokens(value: Vec<EValue>, addr: Vec<String>, result: &mut Vec<TCTok
         match &value[i] {
             EValue::Entry(e) => {
                 result.push(TCToken::IsNotEqTo(addr.clone(), JSValue::Null));
-                result.push(TCToken::Typeof(addr.clone(), JSTypes::Object));
+                result.push(TCToken::Typeof(addr.clone(), JSType::Object));
 
                 match &e.key {
                     EKey::GenericName(n) => match n.clone() {
@@ -375,13 +375,13 @@ pub fn to_tctokens(value: Vec<EValue>, addr: Vec<String>, result: &mut Vec<TCTok
                 Type::StringLit(s) => result.push(TCToken::StringLit(addr.clone(), s.clone())),
                 Type::True => result.push(TCToken::IsEqEqTo(addr.clone(), JSValue::True)),
                 Type::False => result.push(TCToken::IsEqEqTo(addr.clone(), JSValue::False)),
-                Type::String => result.push(TCToken::Typeof(addr.clone(), JSTypes::String)),
-                Type::Number => result.push(TCToken::Typeof(addr.clone(), JSTypes::Number)),
-                Type::Object => result.push(TCToken::Typeof(addr.clone(), JSTypes::Object)),
-                Type::Boolean => result.push(TCToken::Typeof(addr.clone(), JSTypes::Boolean)),
+                Type::String => result.push(TCToken::Typeof(addr.clone(), JSType::String)),
+                Type::Number => result.push(TCToken::Typeof(addr.clone(), JSType::Number)),
+                Type::Object => result.push(TCToken::Typeof(addr.clone(), JSType::Object)),
+                Type::Boolean => result.push(TCToken::Typeof(addr.clone(), JSType::Boolean)),
                 Type::Null => result.push(TCToken::IsEqEqTo(addr.clone(), JSValue::Null)),
                 Type::Undefined => {
-                    result.push(TCToken::Typeof(addr.clone(), JSTypes::Undefined));
+                    result.push(TCToken::Typeof(addr.clone(), JSType::Undefined));
                     result.push(TCToken::IsEqEqTo(addr.clone(), JSValue::Undefined))
                 }
                 Type::Any => (),
@@ -444,8 +444,6 @@ pub fn parse_and(entry: &mut Entry) {
         }
     }
 }
-
-
 
 pub fn parse_or(entry: &mut Entry) {
     let mut i = 0;

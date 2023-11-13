@@ -8,12 +8,18 @@ fn _test_(src: &str) -> Vec<Entry> {
     for i in interfaces.iter_mut() {
         value_walk(i, parse_arrays);
     }
+    for i in interfaces.iter_mut() {
+        parse_and(i);
+    }
+    for i in interfaces.iter_mut() {
+        parse_or(i);
+    }
     return interfaces;
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::lexer::{Oper, Type};
+    use crate::lexer::Type;
 
     use super::*;
 
@@ -48,17 +54,19 @@ mod tests {
                 }),
                 EValue::Entry(Entry {
                     key: EKey::Name("key_2".to_string()),
-                    value: vec![
-                        EValue::Type(Type::String),
-                        EValue::Type(Type::Oper(Oper::Or)),
-                        EValue::Entry(Entry {
-                            key: EKey::None,
-                            value: vec![EValue::Entry(Entry {
-                                key: EKey::Name("key_3".to_string()),
-                                value: vec![EValue::Type(Type::Object)],
-                            })],
-                        }),
-                    ],
+                    value: vec![EValue::Entry(Entry {
+                        key: EKey::Or,
+                        value: vec![
+                            EValue::Type(Type::String),
+                            EValue::Entry(Entry {
+                                key: EKey::None,
+                                value: vec![EValue::Entry(Entry {
+                                    key: EKey::Name("key_3".to_string()),
+                                    value: vec![EValue::Type(Type::Object)],
+                                })],
+                            }),
+                        ],
+                    })],
                 }),
             ],
         }];
@@ -92,15 +100,13 @@ mod tests {
                 key: EKey::Name("_1".to_string()),
                 value: vec![EValue::Entry(Entry {
                     key: EKey::GenericName(GenericName::Array),
-                    value: vec![
-                        EValue::Type(Type::Number),
-                        EValue::Type(Type::Oper(Oper::Or)),
-                        EValue::Type(Type::String),
-                    ],
+                    value: vec![EValue::Entry(Entry {
+                        key: EKey::Or,
+                        value: vec![EValue::Type(Type::Number), EValue::Type(Type::String)],
+                    })],
                 })],
             })],
         }];
         assert_eq!(_test_(raw), exp);
-
     }
 }
