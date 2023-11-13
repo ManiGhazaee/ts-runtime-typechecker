@@ -1,4 +1,4 @@
-use crate::lexer::{Punct, Token, Type};
+use crate::lexer::{Oper, Punct, Token, Type};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum EValue {
@@ -11,6 +11,8 @@ pub enum EKey {
     Name(String),
     GenericName(GenericName),
     Tuple,
+    Or,
+    And,
     None,
 }
 
@@ -312,11 +314,162 @@ pub fn parse_tuples(value: &mut Vec<EValue>) -> () {
     }
 }
 
+type Addr = Vec<String>;
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum JSTypes {
+    String,
+    Number,
+    Function,
+    Boolean,
+    Object,
+    Undefined,
+    Symbol,
+    BigInt,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum JSValue {
+    True,
+    False,
+    Undefined,
+    Null,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum TCToken {
+    Typeof(Addr, JSTypes),
+    StringLit(Addr, String),
+    IsArray(Addr),
+    IsEqTo(Addr, JSValue),
+    IsEqEqTo(Addr, JSValue),
+    IsNotEqTo(Addr, JSValue),
+    IsNotEqEqTo(Addr, JSValue),
+    Array(Addr, JSTypes),
+    And,
+    Or,
+}
+pub fn to_tctokens(value: Vec<EValue>, addr: Vec<String>, result: &mut Vec<TCToken>) -> () {
+    let mut i = 0;
+    while i < value.len() {
+        match &value[i] {
+            EValue::Entry(e) => {
+                result.push(TCToken::IsNotEqTo(addr.clone(), JSValue::Null));
+                result.push(TCToken::Typeof(addr.clone(), JSTypes::Object));
+
+                match &e.key {
+                    EKey::GenericName(n) => match n.clone() {
+                        // GenericName::Custom(_) => todo!(),
+                        GenericName::Array => result.push(TCToken::IsArray(addr.clone())),
+                        _ => (),
+                    },
+                    _ => (),
+                }
+            }
+            EValue::Type(t) => match t {
+                // Type::Custom(_) => todo!(),
+                Type::Oper(o) => match o {
+                    Oper::And => result.push(TCToken::And),
+                    Oper::Or => result.push(TCToken::Or),
+                },
+                Type::StringLit(s) => result.push(TCToken::StringLit(addr.clone(), s.clone())),
+                Type::True => result.push(TCToken::IsEqEqTo(addr.clone(), JSValue::True)),
+                Type::False => result.push(TCToken::IsEqEqTo(addr.clone(), JSValue::False)),
+                Type::String => result.push(TCToken::Typeof(addr.clone(), JSTypes::String)),
+                Type::Number => result.push(TCToken::Typeof(addr.clone(), JSTypes::Number)),
+                Type::Object => result.push(TCToken::Typeof(addr.clone(), JSTypes::Object)),
+                Type::Boolean => result.push(TCToken::Typeof(addr.clone(), JSTypes::Boolean)),
+                Type::Null => result.push(TCToken::IsEqEqTo(addr.clone(), JSValue::Null)),
+                Type::Undefined => {
+                    result.push(TCToken::Typeof(addr.clone(), JSTypes::Undefined));
+                    result.push(TCToken::IsEqEqTo(addr.clone(), JSValue::Undefined))
+                }
+                Type::Any => (),
+                _ => (),
+            },
+        }
+        i += 1;
+    }
+}
+
+pub fn value_walk_with_addr(
+    entry: Entry,
+    f: fn(value: Vec<EValue>, addr: Vec<String>, result: &mut Vec<TCToken>),
+    mut addr: Vec<String>,
+    result: &mut Vec<TCToken>,
+) {
+    (f)(entry.value.clone(), addr.clone(), result);
+    for j in entry.value {
+        if let EValue::Entry(e) = j {
+            if let EKey::Name(name) = &e.key {
+                addr.push(name.clone());
+            }
+            value_walk_with_addr(e.clone(), f, addr.clone(), result);
+        }
+    }
+}
+
 pub fn value_walk(entry: &mut Entry, f: fn(value: &mut Vec<EValue>)) {
     (f)(&mut entry.value);
     for j in &mut entry.value {
         if let EValue::Entry(e) = j {
             value_walk(e, f);
+        }
+    }
+}
+
+pub fn parse_and(entry: &mut Entry) {
+    let mut i = 0;
+    while i < entry.value.len() {
+        match &mut entry.value[i] {
+            EValue::Entry(e) => {
+                parse_and(e);
+                i += 1;
+            }
+            EValue::Type(Type::Oper(Oper::And)) => {
+                if i == 0 || i == entry.value.len() - 1 {
+                    entry.value.remove(i);
+                } else {
+                    entry.value.splice(
+                        (i - 1)..=(i + 1),
+                        [EValue::Entry(Entry {
+                            key: EKey::And,
+                            value: vec![entry.value[i - 1].clone(), entry.value[i + 1].clone()],
+                        })],
+                    );
+                    i -= 1;
+                }
+            }
+            _ => i += 1,
+        }
+    }
+}
+
+
+
+pub fn parse_or(entry: &mut Entry) {
+    let mut i = 0;
+    while i < entry.value.len() {
+        match &mut entry.value[i] {
+            EValue::Entry(e) => {
+                parse_or(e);
+                i += 1;
+            }
+            EValue::Type(Type::Oper(Oper::Or)) => {
+                if i == 0 || i == entry.value.len() - 1 {
+                    entry.value.remove(i);
+                } else {
+                    entry.value.splice(
+                        (i - 1)..=(i + 1),
+                        [EValue::Entry(Entry {
+                            key: EKey::Or,
+                            value: vec![entry.value[i - 1].clone(), entry.value[i + 1].clone()],
+                        })],
+                    );
+                    i -= 1;
+                }
+            }
+            _ => i += 1,
         }
     }
 }

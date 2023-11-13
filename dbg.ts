@@ -22,3 +22,7 @@
 interface AnotherType {
     key_2: Array<number[] | string> | { key_3: (Array<number[]> | number)[] };
 }
+
+interface X {
+    _1: string | number & object;
+}

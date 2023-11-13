@@ -1,4 +1,6 @@
-use crate::inter_parser::{value_walk, parse_arrays, parse_generics, parse_interfaces};
+use crate::inter_parser::{
+    parse_and, parse_arrays, parse_generics, parse_interfaces, parse_or, value_walk,
+};
 use crate::lexer::tokenize;
 use std::{env, error::Error, fs};
 
@@ -15,15 +17,23 @@ fn main() -> Result<(), Box<dyn Error>> {
     println!("{:?}", tokens);
 
     let mut interfaces = parse_interfaces(tokens);
-    println!("{:#?}", interfaces);
     for i in interfaces.iter_mut() {
         value_walk(i, parse_generics);
     }
     for i in interfaces.iter_mut() {
         value_walk(i, parse_arrays);
     }
+    for i in interfaces.iter_mut() {
+        parse_and(i);
+    }
+    for i in interfaces.iter_mut() {
+        parse_or(i);
+    }
+    // let mut result: Vec<TCToken> = Vec::new();
+    // for i in interfaces.iter() {
+    //     value_walk_with_addr(i.clone(), to_tctokens, vec!["obj".to_string()], &mut result);
+    // }
 
-    println!("------------------------------------");
     println!("{:#?}", interfaces);
 
     Ok(())
