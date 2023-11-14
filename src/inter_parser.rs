@@ -1,3 +1,5 @@
+use std::{ops::Add, str::RSplitTerminator, vec};
+
 use crate::lexer::{Oper, Punct, Token, Type};
 
 #[derive(Debug, Clone, PartialEq)]
@@ -329,7 +331,7 @@ pub enum JSType {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum JSValue {
+pub enum JSPrim {
     True,
     False,
     Undefined,
@@ -337,76 +339,26 @@ pub enum JSValue {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum TCToken {
-    Typeof(Addr, JSType),
-    StringLit(Addr, String),
-    IsArray(Addr),
-    IsEqTo(Addr, JSValue),
-    IsEqEqTo(Addr, JSValue),
-    IsNotEqTo(Addr, JSValue),
-    IsNotEqEqTo(Addr, JSValue),
-    Array(Addr, JSType),
+pub enum JSToken {
+    String(String),
+    Id(String),
+    Addr(Addr),
+    PosNumber(usize),
+    NegNumber(usize),
+    EqEq,
+    EqEqEq,
+    NotEq,
+    NotEqEq,
+    In,
+    Dot,
     And,
     Or,
-}
-pub fn to_tctokens(value: Vec<EValue>, addr: Vec<String>, result: &mut Vec<TCToken>) -> () {
-    let mut i = 0;
-    while i < value.len() {
-        match &value[i] {
-            EValue::Entry(e) => {
-                result.push(TCToken::IsNotEqTo(addr.clone(), JSValue::Null));
-                result.push(TCToken::Typeof(addr.clone(), JSType::Object));
-
-                match &e.key {
-                    EKey::GenericName(n) => match n.clone() {
-                        // GenericName::Custom(_) => todo!(),
-                        GenericName::Array => result.push(TCToken::IsArray(addr.clone())),
-                        _ => (),
-                    },
-                    _ => (),
-                }
-            }
-            EValue::Type(t) => match t {
-                // Type::Custom(_) => todo!(),
-                Type::Oper(o) => match o {
-                    Oper::And => result.push(TCToken::And),
-                    Oper::Or => result.push(TCToken::Or),
-                },
-                Type::StringLit(s) => result.push(TCToken::StringLit(addr.clone(), s.clone())),
-                Type::True => result.push(TCToken::IsEqEqTo(addr.clone(), JSValue::True)),
-                Type::False => result.push(TCToken::IsEqEqTo(addr.clone(), JSValue::False)),
-                Type::String => result.push(TCToken::Typeof(addr.clone(), JSType::String)),
-                Type::Number => result.push(TCToken::Typeof(addr.clone(), JSType::Number)),
-                Type::Object => result.push(TCToken::Typeof(addr.clone(), JSType::Object)),
-                Type::Boolean => result.push(TCToken::Typeof(addr.clone(), JSType::Boolean)),
-                Type::Null => result.push(TCToken::IsEqEqTo(addr.clone(), JSValue::Null)),
-                Type::Undefined => {
-                    result.push(TCToken::Typeof(addr.clone(), JSType::Undefined));
-                    result.push(TCToken::IsEqEqTo(addr.clone(), JSValue::Undefined))
-                }
-                Type::Any => (),
-                _ => (),
-            },
-        }
-        i += 1;
-    }
-}
-
-pub fn value_walk_with_addr(
-    entry: Entry,
-    f: fn(value: Vec<EValue>, addr: Vec<String>, result: &mut Vec<TCToken>),
-    mut addr: Vec<String>,
-    result: &mut Vec<TCToken>,
-) {
-    (f)(entry.value.clone(), addr.clone(), result);
-    for j in entry.value {
-        if let EValue::Entry(e) = j {
-            if let EKey::Name(name) = &e.key {
-                addr.push(name.clone());
-            }
-            value_walk_with_addr(e.clone(), f, addr.clone(), result);
-        }
-    }
+    LPar,
+    RPar,
+    Typeof,
+    ArrayIsArray(Addr),
+    JSType(JSType),
+    JSPrim(JSPrim),
 }
 
 pub fn value_walk(entry: &mut Entry, f: fn(value: &mut Vec<EValue>)) {
@@ -470,4 +422,183 @@ pub fn parse_or(entry: &mut Entry) {
             _ => i += 1,
         }
     }
+}
+
+pub fn x(value: EValue, addr: Vec<String>) -> Vec<JSToken> {
+    match value {
+        EValue::Entry(e) => match e.key {
+            EKey::Name(n) => {
+                let new_addr = [addr.clone(), vec![n.clone()]].concat();
+                let token_vec: Vec<JSToken> = e
+                    .value
+                    .iter()
+                    .map(|val| x(val.clone(), new_addr.clone()))
+                    .into_iter()
+                    .flatten()
+                    .collect();
+                let res = [
+                    vec![
+                        JSToken::String(n),
+                        JSToken::In,
+                        JSToken::Addr(addr),
+                        JSToken::And,
+                    ],
+                    token_vec,
+                ]
+                .concat();
+                return res;
+            }
+            EKey::GenericName(g) => match g {
+                GenericName::Custom(_) => (),
+                GenericName::Array => {
+                    let new_addr = [addr.clone(), vec!["0".to_string()]].concat();
+                    let token_vec: Vec<JSToken> = e
+                        .value
+                        .iter()
+                        .map(|val| x(val.clone(), new_addr.clone()))
+                        .into_iter()
+                        .flatten()
+                        .collect();
+                    let res = [
+                        vec![
+                            JSToken::LPar,
+                            JSToken::ArrayIsArray(addr.clone()),
+                            JSToken::And,
+                        ],
+                        token_vec,
+                        vec![JSToken::RPar],
+                    ]
+                    .concat();
+                    return res;
+                }
+            },
+            EKey::Or => {
+                let l = x(e.value[0].clone(), addr.clone());
+                let r = x(e.value[1].clone(), addr.clone());
+                let res = [
+                    vec![JSToken::LPar],
+                    l,
+                    vec![JSToken::Or],
+                    r,
+                    vec![JSToken::RPar],
+                ]
+                .concat();
+                return res;
+            }
+            EKey::And => {
+                let l = x(e.value[0].clone(), addr.clone());
+                let r = x(e.value[1].clone(), addr.clone());
+                let res = [
+                    vec![JSToken::LPar],
+                    l,
+                    vec![JSToken::And],
+                    r,
+                    vec![JSToken::RPar],
+                ]
+                .concat();
+                return res;
+            }
+            EKey::None => {
+                let token_vec: Vec<JSToken> = e
+                    .value
+                    .iter()
+                    .map(|val| x(val.clone(), addr.clone()))
+                    .into_iter()
+                    .flatten()
+                    .collect();
+                let res = [
+                    typeof_token_vec(addr.clone(), JSType::Object),
+                    vec![JSToken::And],
+                    loose_not_eq_to_prim(addr.clone(), JSPrim::Null),
+                    vec![JSToken::And],
+                    token_vec,
+                ]
+                .concat();
+                return res;
+            }
+            _ => (),
+        },
+        EValue::Type(Type::Number) => return typeof_token_vec(addr, JSType::Number),
+        EValue::Type(Type::String) => return typeof_token_vec(addr, JSType::String),
+        EValue::Type(Type::Object) => return typeof_token_vec(addr, JSType::Object),
+        EValue::Type(Type::Boolean) => return typeof_token_vec(addr, JSType::Boolean),
+        EValue::Type(Type::Undefined) => return typeof_token_vec(addr, JSType::Undefined),
+        EValue::Type(Type::False) => return strict_eq_to_prim(addr, JSPrim::False),
+        EValue::Type(Type::True) => return strict_eq_to_prim(addr, JSPrim::True),
+        EValue::Type(Type::Null) => return strict_eq_to_prim(addr, JSPrim::Null),
+        _ => (),
+    };
+    vec![JSToken::And]
+}
+
+fn typeof_token_vec(addr: Addr, js_type: JSType) -> Vec<JSToken> {
+    vec![
+        JSToken::Typeof,
+        JSToken::Addr(addr),
+        JSToken::EqEqEq,
+        JSToken::JSType(js_type),
+    ]
+}
+
+fn strict_eq_to_prim(addr: Addr, prim: JSPrim) -> Vec<JSToken> {
+    vec![JSToken::Addr(addr), JSToken::EqEqEq, JSToken::JSPrim(prim)]
+}
+
+fn loose_not_eq_to_prim(addr: Addr, prim: JSPrim) -> Vec<JSToken> {
+    vec![JSToken::Addr(addr), JSToken::NotEq, JSToken::JSPrim(prim)]
+}
+
+pub fn js_tokens_to_string(mut tokens: Vec<JSToken>) -> String {
+    let mut string_vec: Vec<String> = Vec::new();
+    for i in tokens.iter_mut() {
+        string_vec.push(String::from(match i {
+            JSToken::String(s) => {
+                format!("\"{}\"", s.clone())
+            }
+            JSToken::Id(id) => id.clone(),
+            JSToken::Addr(addr) => {
+                let string = addr_to_string(addr.clone());
+                string
+            }
+            JSToken::EqEq => "==".to_string(),
+            JSToken::EqEqEq => "===".to_string(),
+            JSToken::NotEq => "!=".to_string(),
+            JSToken::NotEqEq => "!==".to_string(),
+            JSToken::In => "in".to_string(),
+            JSToken::And => "&&".to_string(),
+            JSToken::Or => "||".to_string(),
+            JSToken::LPar => "(".to_string(),
+            JSToken::RPar => ")".to_string(),
+            JSToken::Typeof => "typeof".to_string(),
+            JSToken::ArrayIsArray(addr) => {
+                format!("Array.isArray({})", addr_to_string(addr.clone()))
+            }
+            JSToken::JSType(t) => match t {
+                JSType::String => "\"string\"".to_string(),
+                JSType::Number => "\"number\"".to_string(),
+                JSType::Function => "\"function\"".to_string(),
+                JSType::Boolean => "\"boolean\"".to_string(),
+                JSType::Object => "\"object\"".to_string(),
+                JSType::Undefined => "\"undefined\"".to_string(),
+                JSType::Symbol => "\"symbol\"".to_string(),
+                JSType::BigInt => "\"bigint\"".to_string(),
+            },
+            JSToken::JSPrim(p) => match p {
+                JSPrim::True => "true".to_string(),
+                JSPrim::False => "false".to_string(),
+                JSPrim::Undefined => "undefined".to_string(),
+                JSPrim::Null => "null".to_string(),
+            },
+            _ => "".to_string(),
+        }))
+    }
+    return string_vec.join(" ");
+}
+
+fn addr_to_string(addr: Addr) -> String {
+    let mut temp = vec![format!("{}", addr[0].clone())];
+    for i in 1..addr.len() {
+        temp.push(format!("[{}]", format!("\"{}\"", addr[i])));
+    }
+    return temp.join("");
 }
