@@ -12,7 +12,8 @@ pub enum EValue {
 pub enum EKey {
     Name(String),
     GenericName(GenericName),
-    Tuple,
+    // Tuple,
+    Paren,
     Or,
     And,
     None,
@@ -343,14 +344,13 @@ pub enum JSToken {
     String(String),
     Id(String),
     Addr(Addr),
-    PosNumber(usize),
-    NegNumber(usize),
+    // PosNumber(usize),
+    // NegNumber(usize),
     EqEq,
     EqEqEq,
     NotEq,
     NotEqEq,
     In,
-    Dot,
     And,
     Or,
     LPar,
@@ -367,6 +367,60 @@ pub fn value_walk(entry: &mut Entry, f: fn(value: &mut Vec<EValue>)) {
         if let EValue::Entry(e) = j {
             value_walk(e, f);
         }
+    }
+}
+
+pub fn parse_parens(entry: &mut Entry) {
+    println!("hello");
+    let mut i = 0;
+    while i < entry.value.len() {
+        match &mut entry.value[i] {
+            EValue::Entry(e) => {
+                parse_parens(e);
+            }
+            EValue::Type(t) => match t {
+                Type::Punct(Punct::LPar) => {
+                    let start = i;
+                    let end: usize;
+                    let mut j = i + 1;
+                    let mut par_count = 1;
+                    let mut value: Vec<EValue> = Vec::new();
+                    while j < entry.value.len() {
+                        match &mut entry.value[j] {
+                            EValue::Type(Type::Punct(Punct::LPar)) => {
+                                par_count += 1;
+                                value.push(EValue::Type(Type::Punct(Punct::LPar)));
+                            }
+                            EValue::Type(Type::Punct(Punct::RPar)) => {
+                                par_count -= 1;
+                                if par_count == 0 {
+                                    end = j;
+                                    entry.value.splice(
+                                        start..=end,
+                                        [EValue::Entry(Entry {
+                                            key: EKey::Paren,
+                                            value,
+                                        })],
+                                    );
+                                    if let EValue::Entry(e) = &mut entry.value[i] {
+                                        parse_parens(e);
+                                    }
+                                    break;
+                                } else {
+                                    value.push(EValue::Type(Type::Punct(Punct::RPar)));
+                                }
+                            }
+                            t => {
+                                value.push(t.clone());
+                            }
+                        }
+                        j += 1;
+                    }
+                }
+                _ => (),
+            },
+        }
+        i += 1;
     }
 }
 
@@ -516,7 +570,19 @@ pub fn x(value: EValue, addr: Vec<String>) -> Vec<JSToken> {
                 .concat();
                 return res;
             }
-            _ => (),
+            EKey::Paren => {
+                let token_vec = e
+                    .value
+                    .iter()
+                    .map(|val| x(val.clone(), addr.clone()))
+                    .into_iter()
+                    .flatten()
+                    .collect();
+
+                // let res = [vec![JSToken::LPar], token_vec, vec![JSToken::RPar]].concat();
+                // return res;
+                return token_vec;
+            }
         },
         EValue::Type(Type::Number) => return typeof_token_vec(addr, JSType::Number),
         EValue::Type(Type::String) => return typeof_token_vec(addr, JSType::String),
@@ -551,7 +617,7 @@ fn loose_not_eq_to_prim(addr: Addr, prim: JSPrim) -> Vec<JSToken> {
 pub fn js_tokens_to_string(mut tokens: Vec<JSToken>) -> String {
     let mut string_vec: Vec<String> = Vec::new();
     for i in tokens.iter_mut() {
-        string_vec.push(String::from(match i {
+        string_vec.push(match i {
             JSToken::String(s) => {
                 format!("\"{}\"", s.clone())
             }
@@ -573,24 +639,24 @@ pub fn js_tokens_to_string(mut tokens: Vec<JSToken>) -> String {
             JSToken::ArrayIsArray(addr) => {
                 format!("Array.isArray({})", addr_to_string(addr.clone()))
             }
-            JSToken::JSType(t) => match t {
-                JSType::String => "\"string\"".to_string(),
-                JSType::Number => "\"number\"".to_string(),
-                JSType::Function => "\"function\"".to_string(),
-                JSType::Boolean => "\"boolean\"".to_string(),
-                JSType::Object => "\"object\"".to_string(),
-                JSType::Undefined => "\"undefined\"".to_string(),
-                JSType::Symbol => "\"symbol\"".to_string(),
-                JSType::BigInt => "\"bigint\"".to_string(),
-            },
-            JSToken::JSPrim(p) => match p {
-                JSPrim::True => "true".to_string(),
-                JSPrim::False => "false".to_string(),
-                JSPrim::Undefined => "undefined".to_string(),
-                JSPrim::Null => "null".to_string(),
-            },
-            _ => "".to_string(),
-        }))
+            JSToken::JSType(t) => String::from(match t {
+                JSType::String => "\"string\"",
+                JSType::Number => "\"number\"",
+                JSType::Function => "\"function\"",
+                JSType::Boolean => "\"boolean\"",
+                JSType::Object => "\"object\"",
+                JSType::Undefined => "\"undefined\"",
+                JSType::Symbol => "\"symbol\"",
+                JSType::BigInt => "\"bigint\"",
+            }),
+            JSToken::JSPrim(p) => String::from(match p {
+                JSPrim::True => "true",
+                JSPrim::False => "false",
+                JSPrim::Undefined => "undefined",
+                JSPrim::Null => "null",
+            }),
+            // _ => "".to_string(),
+        })
     }
     return string_vec.join(" ");
 }

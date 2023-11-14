@@ -20,7 +20,7 @@
 // }
 
 interface AnotherType {
-    key_2: Array<number[] | string> | { key_3: (Array<number[]> | number)[] };
+    k: number[] & ((string | number)[] | object);
 }
 
 // interface X {

@@ -1,5 +1,5 @@
 use crate::inter_parser::{
-    parse_and, parse_arrays, parse_generics, parse_interfaces, parse_or, value_walk, x, js_tokens_to_string,
+    parse_and, parse_arrays, parse_generics, parse_interfaces, parse_or, value_walk, x, js_tokens_to_string, parse_parens,
 };
 use crate::lexer::tokenize;
 use std::{env, error::Error, fs};
@@ -20,6 +20,10 @@ fn main() -> Result<(), Box<dyn Error>> {
     }
     for i in interfaces.iter_mut() {
         value_walk(i, parse_arrays);
+    }
+    println!("{:#?}", interfaces);
+    for i in interfaces.iter_mut() {
+        parse_parens(i);
     }
     for i in interfaces.iter_mut() {
         parse_and(i);
