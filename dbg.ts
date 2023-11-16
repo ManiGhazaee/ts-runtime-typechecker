@@ -21,6 +21,7 @@
 
 interface AnotherType {
     k: number[] & ((string | number)[] | object);
+    x: number;
 }
 
 // interface X {

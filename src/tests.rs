@@ -1,4 +1,4 @@
-use crate::{inter_parser::*, lexer::tokenize};
+use crate::{lexer::tokenize, parsers::*};
 fn _test_(src: &str) -> Vec<Entry> {
     let tokens = tokenize(src.to_string());
     let mut interfaces = parse_interfaces(tokens);
@@ -31,10 +31,10 @@ mod tests {
         }
         ";
         let exp: Vec<Entry> = vec![Entry {
-            key: EKey::Name("inter".to_string()),
-            value: vec![EValue::Entry(Entry {
-                key: EKey::Name("_1".to_string()),
-                value: vec![EValue::Type(Type::Number)],
+            key: Key::Name("inter".to_string()),
+            value: vec![Value::Entry(Entry {
+                key: Key::Name("_1".to_string()),
+                value: vec![Value::Type(Type::Number)],
             })],
         }];
         assert_eq!(_test_(raw), exp);
@@ -46,23 +46,23 @@ mod tests {
         }
         ";
         let exp: Vec<Entry> = vec![Entry {
-            key: EKey::Name("inter".to_string()),
+            key: Key::Name("inter".to_string()),
             value: vec![
-                EValue::Entry(Entry {
-                    key: EKey::Name("key_1".to_string()),
-                    value: vec![EValue::Type(Type::Number)],
+                Value::Entry(Entry {
+                    key: Key::Name("key_1".to_string()),
+                    value: vec![Value::Type(Type::Number)],
                 }),
-                EValue::Entry(Entry {
-                    key: EKey::Name("key_2".to_string()),
-                    value: vec![EValue::Entry(Entry {
-                        key: EKey::Or,
+                Value::Entry(Entry {
+                    key: Key::Name("key_2".to_string()),
+                    value: vec![Value::Entry(Entry {
+                        key: Key::Or,
                         value: vec![
-                            EValue::Type(Type::String),
-                            EValue::Entry(Entry {
-                                key: EKey::None,
-                                value: vec![EValue::Entry(Entry {
-                                    key: EKey::Name("key_3".to_string()),
-                                    value: vec![EValue::Type(Type::Object)],
+                            Value::Type(Type::String),
+                            Value::Entry(Entry {
+                                key: Key::None,
+                                value: vec![Value::Entry(Entry {
+                                    key: Key::Name("key_3".to_string()),
+                                    value: vec![Value::Type(Type::Object)],
                                 })],
                             }),
                         ],
@@ -78,12 +78,12 @@ mod tests {
         }
         ";
         let exp: Vec<Entry> = vec![Entry {
-            key: EKey::Name("inter".to_string()),
-            value: vec![EValue::Entry(Entry {
-                key: EKey::Name("_1".to_string()),
-                value: vec![EValue::Entry(Entry {
-                    key: EKey::GenericName(GenericName::Array),
-                    value: vec![EValue::Type(Type::Number)],
+            key: Key::Name("inter".to_string()),
+            value: vec![Value::Entry(Entry {
+                key: Key::Name("_1".to_string()),
+                value: vec![Value::Entry(Entry {
+                    key: Key::Generic(Generic::Array),
+                    value: vec![Value::Type(Type::Number)],
                 })],
             })],
         }];
@@ -95,14 +95,14 @@ mod tests {
         }
         ";
         let exp: Vec<Entry> = vec![Entry {
-            key: EKey::Name("inter".to_string()),
-            value: vec![EValue::Entry(Entry {
-                key: EKey::Name("_1".to_string()),
-                value: vec![EValue::Entry(Entry {
-                    key: EKey::GenericName(GenericName::Array),
-                    value: vec![EValue::Entry(Entry {
-                        key: EKey::Or,
-                        value: vec![EValue::Type(Type::Number), EValue::Type(Type::String)],
+            key: Key::Name("inter".to_string()),
+            value: vec![Value::Entry(Entry {
+                key: Key::Name("_1".to_string()),
+                value: vec![Value::Entry(Entry {
+                    key: Key::Generic(Generic::Array),
+                    value: vec![Value::Entry(Entry {
+                        key: Key::Or,
+                        value: vec![Value::Type(Type::Number), Value::Type(Type::String)],
                     })],
                 })],
             })],

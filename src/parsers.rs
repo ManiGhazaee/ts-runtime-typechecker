@@ -1,40 +1,79 @@
-use std::{ops::Add, str::RSplitTerminator, vec};
+use std::vec;
 
 use crate::lexer::{Oper, Punct, Token, Type};
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum EValue {
+pub enum Value {
     Entry(Entry),
     Type(Type),
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum EKey {
+pub enum Key {
     Name(String),
-    GenericName(GenericName),
-    // Tuple,
+    Generic(Generic),
     Paren,
     Or,
     And,
     None,
+    // Tuple,
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum GenericName {
+pub enum Generic {
     Custom(String),
     Array,
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct Tuple {
-    elems: Vec<EValue>,
+pub struct Entry {
+    pub key: Key,
+    pub value: Vec<Value>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct Entry {
-    pub key: EKey,
-    pub value: Vec<EValue>,
+pub enum JSType {
+    String,
+    Number,
+    Function,
+    Boolean,
+    Object,
+    Undefined,
+    Symbol,
+    BigInt,
 }
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum JSPrim {
+    True,
+    False,
+    Undefined,
+    Null,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum JSToken {
+    String(String),
+    Id(String),
+    Addr(Addr),
+    // PosNumber(usize),
+    // NegNumber(usize),
+    EqEq,
+    EqEqEq,
+    NotEq,
+    NotEqEq,
+    In,
+    And,
+    Or,
+    LPar,
+    RPar,
+    Typeof,
+    ArrayIsArray(Addr),
+    JSType(JSType),
+    JSPrim(JSPrim),
+}
+
+type Addr = Vec<String>;
 
 fn stack_handle_remove(stack: &mut Vec<Entry>) -> () {
     let stack_len = stack.len();
@@ -42,13 +81,13 @@ fn stack_handle_remove(stack: &mut Vec<Entry>) -> () {
         return;
     }
     let last = stack[stack_len - 1].clone();
-    stack[stack_len - 2].value.push(EValue::Entry(last));
+    stack[stack_len - 2].value.push(Value::Entry(last));
     stack.pop();
 }
 
 fn add_type_value_to_last(stack: &mut Vec<Entry>, _type: &Type) -> () {
     let stack_len = stack.len();
-    stack[stack_len - 1].value.push(EValue::Type(_type.clone()));
+    stack[stack_len - 1].value.push(Value::Type(_type.clone()));
 }
 
 pub fn parse_interfaces(mut tokens: Vec<Token>) -> Vec<Entry> {
@@ -116,7 +155,7 @@ pub fn parse_interfaces(mut tokens: Vec<Token>) -> Vec<Entry> {
                         _ => panic!("Interface name not found"),
                     };
                     let entry = Entry {
-                        key: EKey::Name(entry_name),
+                        key: Key::Name(entry_name),
                         value: Vec::new(),
                     };
                     stack.push(entry);
@@ -129,7 +168,7 @@ pub fn parse_interfaces(mut tokens: Vec<Token>) -> Vec<Entry> {
                         _ => panic!("Interface name not found"),
                     };
                     let entry = Entry {
-                        key: EKey::Name(entry_name),
+                        key: Key::Name(entry_name),
                         value: Vec::new(),
                     };
                     stack.push(entry);
@@ -140,13 +179,13 @@ pub fn parse_interfaces(mut tokens: Vec<Token>) -> Vec<Entry> {
             }
             Token::Key(str) => {
                 stack.push(Entry {
-                    key: EKey::Name(str.to_string()),
+                    key: Key::Name(str.to_string()),
                     value: Vec::new(),
                 });
             }
             Token::Type(Type::Punct(Punct::LBrace)) => {
                 let entry = Entry {
-                    key: EKey::None,
+                    key: Key::None,
                     value: Vec::new(),
                 };
                 stack.push(entry);
@@ -174,37 +213,37 @@ pub fn parse_interfaces(mut tokens: Vec<Token>) -> Vec<Entry> {
     interfaces
 }
 
-pub fn parse_arrays(value: &mut Vec<EValue>) -> () {
+pub fn parse_arrays(value: &mut Vec<Value>) -> () {
     let mut i = 0;
     while i < value.len() - 1 {
         if let (
-            &EValue::Type(Type::Punct(Punct::LBrack)),
-            &EValue::Type(Type::Punct(Punct::RBrack)),
+            &Value::Type(Type::Punct(Punct::LBrack)),
+            &Value::Type(Type::Punct(Punct::RBrack)),
         ) = (&value[i], &value[i + 1])
         {
             let end = i + 1;
             let start: usize;
             let mut j = i - 1;
             let mut par_count = 0;
-            let mut args: Vec<EValue> = Vec::new();
+            let mut args: Vec<Value> = Vec::new();
             loop {
                 match &value[j] {
-                    EValue::Type(Type::Punct(Punct::RPar)) => par_count += 1,
-                    EValue::Type(Type::Punct(Punct::LPar)) => {
+                    Value::Type(Type::Punct(Punct::RPar)) => par_count += 1,
+                    Value::Type(Type::Punct(Punct::LPar)) => {
                         par_count -= 1;
                         if par_count == 0 && args.len() > 0 {
                             start = j;
                             args.reverse();
                             value.splice(
                                 start..=end,
-                                [EValue::Entry(Entry {
-                                    key: EKey::GenericName(GenericName::Array),
+                                [Value::Entry(Entry {
+                                    key: Key::Generic(Generic::Array),
                                     value: args,
                                 })],
                             );
                             break;
                         } else if par_count == 0 && args.len() == 0 {
-                            panic!("unexpected EValue before []");
+                            panic!("unexpected Value before []");
                         }
                     }
                     t => {
@@ -214,14 +253,14 @@ pub fn parse_arrays(value: &mut Vec<EValue>) -> () {
                             args.reverse();
                             value.splice(
                                 start..=end,
-                                [EValue::Entry(Entry {
-                                    key: EKey::GenericName(GenericName::Array),
+                                [Value::Entry(Entry {
+                                    key: Key::Generic(Generic::Array),
                                     value: args,
                                 })],
                             );
                             break;
                         } else if par_count == 0 && args.len() == 0 {
-                            panic!("unexpected EValue before []");
+                            panic!("unexpected Value before []");
                         }
                     }
                 }
@@ -232,33 +271,33 @@ pub fn parse_arrays(value: &mut Vec<EValue>) -> () {
     }
 }
 
-pub fn parse_generics(value: &mut Vec<EValue>) -> () {
+pub fn parse_generics(value: &mut Vec<Value>) -> () {
     let mut i = 1;
     while i < value.len() {
-        if let &EValue::Type(Type::Punct(Punct::Less)) = &value[i] {
-            let generic_name: GenericName = match &value[i - 1] {
-                EValue::Type(Type::Custom(str)) => match str.clone().as_str() {
-                    "Array" => GenericName::Array,
-                    _ => GenericName::Custom(str.clone()),
+        if let &Value::Type(Type::Punct(Punct::Less)) = &value[i] {
+            let generic_name: Generic = match &value[i - 1] {
+                Value::Type(Type::Custom(str)) => match str.clone().as_str() {
+                    "Array" => Generic::Array,
+                    _ => Generic::Custom(str.clone()),
                 },
                 _ => panic!("unexpected generic name"),
             };
             let start = i - 1;
             let end: usize;
             let mut j = i + 1;
-            let mut args: Vec<EValue> = Vec::new();
+            let mut args: Vec<Value> = Vec::new();
             let mut count = 1;
             while j < value.len() {
                 match &value[j] {
-                    EValue::Type(Type::Punct(Punct::Less)) => count += 1,
-                    EValue::Type(Type::Punct(Punct::Greater)) => {
+                    Value::Type(Type::Punct(Punct::Less)) => count += 1,
+                    Value::Type(Type::Punct(Punct::Greater)) => {
                         count -= 1;
                         if count == 0 && args.len() > 0 {
                             end = j;
                             value.splice(
                                 start..=end,
-                                [EValue::Entry(Entry {
-                                    key: EKey::GenericName(generic_name),
+                                [Value::Entry(Entry {
+                                    key: Key::Generic(generic_name),
                                     value: args.clone(),
                                 })],
                             );
@@ -278,93 +317,10 @@ pub fn parse_generics(value: &mut Vec<EValue>) -> () {
     }
 }
 
-#[allow(dead_code)]
-#[allow(unused)]
-pub fn parse_tuples(value: &mut Vec<EValue>) -> () {
-    let mut i = 0;
-    while i < value.len() - 1 {
-        match value[i] {
-            EValue::Type(Type::Punct(Punct::LBrack)) => {
-                if let EValue::Type(Type::Punct(Punct::RBrack)) = value[i + 1] {
-                    continue;
-                }
-                let start = i - 1;
-                let end: usize;
-                let mut count = 1;
-                let mut j = i + 1;
-                let mut elems: Vec<EValue> = Vec::new();
-                while j < value.len() {
-                    match value[j] {
-                        EValue::Type(Type::Punct(Punct::LBrack)) => count += 1,
-                        EValue::Type(Type::Punct(Punct::RBrack)) => {
-                            count -= 1;
-                            if count == 0 && elems.len() > 0 {
-                                end = j;
-
-                                break;
-                            } else if count == 0 && elems.len() == 0 {
-                                panic!("why?");
-                            }
-                        }
-                        _ => (),
-                    }
-                    j += 1;
-                }
-            }
-            _ => (),
-        }
-        i += 1;
-    }
-}
-
-type Addr = Vec<String>;
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum JSType {
-    String,
-    Number,
-    Function,
-    Boolean,
-    Object,
-    Undefined,
-    Symbol,
-    BigInt,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum JSPrim {
-    True,
-    False,
-    Undefined,
-    Null,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum JSToken {
-    String(String),
-    Id(String),
-    Addr(Addr),
-    // PosNumber(usize),
-    // NegNumber(usize),
-    EqEq,
-    EqEqEq,
-    NotEq,
-    NotEqEq,
-    In,
-    And,
-    Or,
-    LPar,
-    RPar,
-    Typeof,
-    ArrayIsArray(Addr),
-    JSType(JSType),
-    JSPrim(JSPrim),
-}
-
-pub fn value_walk(entry: &mut Entry, f: fn(value: &mut Vec<EValue>)) {
+pub fn value_walk(entry: &mut Entry, f: fn(value: &mut Vec<Value>)) {
     (f)(&mut entry.value);
     for j in &mut entry.value {
-        if let EValue::Entry(e) = j {
+        if let Value::Entry(e) = j {
             value_walk(e, f);
         }
     }
@@ -375,39 +331,39 @@ pub fn parse_parens(entry: &mut Entry) {
     let mut i = 0;
     while i < entry.value.len() {
         match &mut entry.value[i] {
-            EValue::Entry(e) => {
+            Value::Entry(e) => {
                 parse_parens(e);
             }
-            EValue::Type(t) => match t {
+            Value::Type(t) => match t {
                 Type::Punct(Punct::LPar) => {
                     let start = i;
                     let end: usize;
                     let mut j = i + 1;
                     let mut par_count = 1;
-                    let mut value: Vec<EValue> = Vec::new();
+                    let mut value: Vec<Value> = Vec::new();
                     while j < entry.value.len() {
                         match &mut entry.value[j] {
-                            EValue::Type(Type::Punct(Punct::LPar)) => {
+                            Value::Type(Type::Punct(Punct::LPar)) => {
                                 par_count += 1;
-                                value.push(EValue::Type(Type::Punct(Punct::LPar)));
+                                value.push(Value::Type(Type::Punct(Punct::LPar)));
                             }
-                            EValue::Type(Type::Punct(Punct::RPar)) => {
+                            Value::Type(Type::Punct(Punct::RPar)) => {
                                 par_count -= 1;
                                 if par_count == 0 {
                                     end = j;
                                     entry.value.splice(
                                         start..=end,
-                                        [EValue::Entry(Entry {
-                                            key: EKey::Paren,
+                                        [Value::Entry(Entry {
+                                            key: Key::Paren,
                                             value,
                                         })],
                                     );
-                                    if let EValue::Entry(e) = &mut entry.value[i] {
+                                    if let Value::Entry(e) = &mut entry.value[i] {
                                         parse_parens(e);
                                     }
                                     break;
                                 } else {
-                                    value.push(EValue::Type(Type::Punct(Punct::RPar)));
+                                    value.push(Value::Type(Type::Punct(Punct::RPar)));
                                 }
                             }
                             t => {
@@ -428,18 +384,18 @@ pub fn parse_and(entry: &mut Entry) {
     let mut i = 0;
     while i < entry.value.len() {
         match &mut entry.value[i] {
-            EValue::Entry(e) => {
+            Value::Entry(e) => {
                 parse_and(e);
                 i += 1;
             }
-            EValue::Type(Type::Oper(Oper::And)) => {
+            Value::Type(Type::Oper(Oper::And)) => {
                 if i == 0 || i == entry.value.len() - 1 {
                     entry.value.remove(i);
                 } else {
                     entry.value.splice(
                         (i - 1)..=(i + 1),
-                        [EValue::Entry(Entry {
-                            key: EKey::And,
+                        [Value::Entry(Entry {
+                            key: Key::And,
                             value: vec![entry.value[i - 1].clone(), entry.value[i + 1].clone()],
                         })],
                     );
@@ -455,18 +411,18 @@ pub fn parse_or(entry: &mut Entry) {
     let mut i = 0;
     while i < entry.value.len() {
         match &mut entry.value[i] {
-            EValue::Entry(e) => {
+            Value::Entry(e) => {
                 parse_or(e);
                 i += 1;
             }
-            EValue::Type(Type::Oper(Oper::Or)) => {
+            Value::Type(Type::Oper(Oper::Or)) => {
                 if i == 0 || i == entry.value.len() - 1 {
                     entry.value.remove(i);
                 } else {
                     entry.value.splice(
                         (i - 1)..=(i + 1),
-                        [EValue::Entry(Entry {
-                            key: EKey::Or,
+                        [Value::Entry(Entry {
+                            key: Key::Or,
                             value: vec![entry.value[i - 1].clone(), entry.value[i + 1].clone()],
                         })],
                     );
@@ -478,10 +434,10 @@ pub fn parse_or(entry: &mut Entry) {
     }
 }
 
-pub fn x(value: EValue, addr: Vec<String>) -> Vec<JSToken> {
+pub fn x(value: Value, addr: Vec<String>) -> Vec<JSToken> {
     match value {
-        EValue::Entry(e) => match e.key {
-            EKey::Name(n) => {
+        Value::Entry(e) => match e.key {
+            Key::Name(n) => {
                 let new_addr = [addr.clone(), vec![n.clone()]].concat();
                 let token_vec: Vec<JSToken> = e
                     .value
@@ -502,9 +458,9 @@ pub fn x(value: EValue, addr: Vec<String>) -> Vec<JSToken> {
                 .concat();
                 return res;
             }
-            EKey::GenericName(g) => match g {
-                GenericName::Custom(_) => (),
-                GenericName::Array => {
+            Key::Generic(g) => match g {
+                Generic::Custom(_) => (),
+                Generic::Array => {
                     let new_addr = [addr.clone(), vec!["0".to_string()]].concat();
                     let token_vec: Vec<JSToken> = e
                         .value
@@ -526,7 +482,7 @@ pub fn x(value: EValue, addr: Vec<String>) -> Vec<JSToken> {
                     return res;
                 }
             },
-            EKey::Or => {
+            Key::Or => {
                 let l = x(e.value[0].clone(), addr.clone());
                 let r = x(e.value[1].clone(), addr.clone());
                 let res = [
@@ -539,7 +495,7 @@ pub fn x(value: EValue, addr: Vec<String>) -> Vec<JSToken> {
                 .concat();
                 return res;
             }
-            EKey::And => {
+            Key::And => {
                 let l = x(e.value[0].clone(), addr.clone());
                 let r = x(e.value[1].clone(), addr.clone());
                 let res = [
@@ -552,7 +508,7 @@ pub fn x(value: EValue, addr: Vec<String>) -> Vec<JSToken> {
                 .concat();
                 return res;
             }
-            EKey::None => {
+            Key::None => {
                 let token_vec: Vec<JSToken> = e
                     .value
                     .iter()
@@ -570,7 +526,7 @@ pub fn x(value: EValue, addr: Vec<String>) -> Vec<JSToken> {
                 .concat();
                 return res;
             }
-            EKey::Paren => {
+            Key::Paren => {
                 let token_vec = e
                     .value
                     .iter()
@@ -584,14 +540,14 @@ pub fn x(value: EValue, addr: Vec<String>) -> Vec<JSToken> {
                 return token_vec;
             }
         },
-        EValue::Type(Type::Number) => return typeof_token_vec(addr, JSType::Number),
-        EValue::Type(Type::String) => return typeof_token_vec(addr, JSType::String),
-        EValue::Type(Type::Object) => return typeof_token_vec(addr, JSType::Object),
-        EValue::Type(Type::Boolean) => return typeof_token_vec(addr, JSType::Boolean),
-        EValue::Type(Type::Undefined) => return typeof_token_vec(addr, JSType::Undefined),
-        EValue::Type(Type::False) => return strict_eq_to_prim(addr, JSPrim::False),
-        EValue::Type(Type::True) => return strict_eq_to_prim(addr, JSPrim::True),
-        EValue::Type(Type::Null) => return strict_eq_to_prim(addr, JSPrim::Null),
+        Value::Type(Type::Number) => return typeof_token_vec(addr, JSType::Number),
+        Value::Type(Type::String) => return typeof_token_vec(addr, JSType::String),
+        Value::Type(Type::Object) => return typeof_token_vec(addr, JSType::Object),
+        Value::Type(Type::Boolean) => return typeof_token_vec(addr, JSType::Boolean),
+        Value::Type(Type::Undefined) => return typeof_token_vec(addr, JSType::Undefined),
+        Value::Type(Type::False) => return strict_eq_to_prim(addr, JSPrim::False),
+        Value::Type(Type::True) => return strict_eq_to_prim(addr, JSPrim::True),
+        Value::Type(Type::Null) => return strict_eq_to_prim(addr, JSPrim::Null),
         _ => (),
     };
     vec![JSToken::And]

@@ -1,12 +1,14 @@
-use crate::inter_parser::{
-    parse_and, parse_arrays, parse_generics, parse_interfaces, parse_or, value_walk, x, js_tokens_to_string, parse_parens,
-};
 use crate::lexer::tokenize;
+use crate::parsers::{
+    js_tokens_to_string, parse_and, parse_arrays, parse_generics, parse_interfaces, parse_or, parse_parens, value_walk,
+    x,
+};
+use std::string;
 use std::{env, error::Error, fs};
 
-mod inter_parser;
 mod lexer;
 mod macros;
+mod parsers;
 mod tests;
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -15,32 +17,22 @@ fn main() -> Result<(), Box<dyn Error>> {
     let src = fs::read_to_string(file_path)?;
     let tokens = tokenize(src);
     let mut interfaces = parse_interfaces(tokens);
-    for i in interfaces.iter_mut() {
-        value_walk(i, parse_generics);
-    }
-    for i in interfaces.iter_mut() {
-        value_walk(i, parse_arrays);
-    }
     println!("{:#?}", interfaces);
-    for i in interfaces.iter_mut() {
-        parse_parens(i);
-    }
-    for i in interfaces.iter_mut() {
-        parse_and(i);
-    }
-    for i in interfaces.iter_mut() {
-        parse_or(i);
-    }
+    interfaces.iter_mut().for_each(|i| value_walk(i, parse_generics));
+    interfaces.iter_mut().for_each(|i| value_walk(i, parse_arrays));
+    interfaces.iter_mut().for_each(|i| parse_parens(i));
+    interfaces.iter_mut().for_each(|i| parse_and(i));
+    interfaces.iter_mut().for_each(|i| parse_or(i));
     println!("{:#?}", interfaces);
-    for i in interfaces.into_iter() {
-        for j in i.value {
+
+    let strings: Vec<String> = interfaces.into_iter().map(|i| {
+        i.value.into_iter().map(|j| {
             let all = x(j, vec!["obj".to_string()]);
             let string = js_tokens_to_string(all);
-            println!("{}", string);
-        }
-    }
-
-    // println!("{:#?}", interfaces);
+            string
+        }).collect::<Vec<String>>().join("")
+    }).collect();
+    println!("{:#?}", strings);
 
     Ok(())
 }
