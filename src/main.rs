@@ -1,38 +1,63 @@
+use crate::js::{function_dec, return_body};
 use crate::lexer::tokenize;
 use crate::parsers::{
-    js_tokens_to_string, parse_and, parse_arrays, parse_generics, parse_interfaces, parse_or, parse_parens, value_walk,
-    x,
+    for_each_value, js_tokens_to_string, parse_and, parse_arrays, parse_generics, parse_interfaces, parse_or,
+    parse_parens, x, Key,
 };
-use std::string;
-use std::{env, error::Error, fs};
+use std::time::Instant;
+use std::{env, fs};
 
+mod js;
 mod lexer;
 mod macros;
 mod parsers;
 mod tests;
 
-fn main() -> Result<(), Box<dyn Error>> {
+fn main() {
+    let inst = Instant::now();
     let args: Vec<String> = env::args().collect();
-    let file_path = args.get(1).ok_or("file_path not found")?;
-    let src = fs::read_to_string(file_path)?;
+    let file_path = args.get(1).expect("ERROR: File path not provided");
+    let write_path = args.get(2).expect("ERROR: Write file path not provided");
+    let src =
+        fs::read_to_string(file_path).expect(&format!("ERROR: Something went wrong reading file at {}", file_path));
     let tokens = tokenize(src);
     let mut interfaces = parse_interfaces(tokens);
-    println!("{:#?}", interfaces);
-    interfaces.iter_mut().for_each(|i| value_walk(i, parse_generics));
-    interfaces.iter_mut().for_each(|i| value_walk(i, parse_arrays));
+
+    interfaces.iter_mut().for_each(|i| for_each_value(i, parse_generics));
+    interfaces.iter_mut().for_each(|i| for_each_value(i, parse_arrays));
     interfaces.iter_mut().for_each(|i| parse_parens(i));
     interfaces.iter_mut().for_each(|i| parse_and(i));
     interfaces.iter_mut().for_each(|i| parse_or(i));
-    println!("{:#?}", interfaces);
+    // println!("{:#?}", interfaces);
 
-    let strings: Vec<String> = interfaces.into_iter().map(|i| {
-        i.value.into_iter().map(|j| {
-            let all = x(j, vec!["obj".to_string()]);
-            let string = js_tokens_to_string(all);
-            string
-        }).collect::<Vec<String>>().join("")
-    }).collect();
-    println!("{:#?}", strings);
+    let string: String = interfaces
+        .into_iter()
+        .map(|i| {
+            let entries_len = i.value.len();
+            let interface_name = if let Key::Name(name) = i.key {
+                name
+            } else {
+                panic!("ERROR: Name of interface not found");
+            };
+            let string = i
+                .value
+                .into_iter()
+                .map(|j| {
+                    let all = x(j, vec!["o".to_string()]);
+                    let string = js_tokens_to_string(all);
+                    string
+                })
+                .collect::<Vec<String>>()
+                .join("");
+            let return_body = return_body(entries_len, string);
+            format!("{}\n", function_dec(interface_name, return_body))
+        })
+        .collect::<Vec<String>>()
+        .join("\n");
 
-    Ok(())
+    // println!("{}", string);
+
+    fs::write(write_path, string).expect("ERROR: Something went wrong with writing file");
+
+    println!("    Finished writing at [{write_path}] in {}ms", inst.elapsed().as_millis());
 }

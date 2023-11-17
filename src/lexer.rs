@@ -1,7 +1,6 @@
 use crate::next;
 
-#[derive(Debug, Clone)]
-#[derive(PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Token {
     Id(String),
     Number(usize),
@@ -9,18 +8,17 @@ pub enum Token {
     Undefined(String),
     Type(Type),
     Key(String),
-    EndOfEntry,
     Interface,
     Export,
     Colon,
     Eq,
     Slash,
     Comment,
-    EOF,
+    EOE, // EndOfEntry
+    EOF, // EndOfFile
 }
 
-#[derive(Debug, Clone)]
-#[derive(PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Type {
     Custom(String),
     Oper(Oper),
@@ -37,15 +35,13 @@ pub enum Type {
     Any,
 }
 
-#[derive(Debug, Clone)]
-#[derive(PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Oper {
     And,
     Or,
 }
 
-#[derive(Debug, Clone)]
-#[derive(PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Punct {
     LBrace,
     RBrace,
@@ -54,8 +50,8 @@ pub enum Punct {
     LPar,
     RPar,
     Comma,
-    Less,
-    Greater,
+    LAngleB,
+    RAngleB,
 }
 
 pub fn is_skippable(char: &char) -> bool {
@@ -95,7 +91,7 @@ pub fn tokenize(src: String) -> Vec<Token> {
                 while j < src_vec_len && src_vec[j] as char != '"' {
                     j += 1;
                 }
-                let string = String::from_utf8_lossy(&src_vec[i..=j]).to_string();
+                let string = String::from_utf8_lossy(&src_vec[(i + 1)..j]).to_string();
                 i = j;
                 Token::String(string)
             }
@@ -104,14 +100,14 @@ pub fn tokenize(src: String) -> Vec<Token> {
                 while j < src_vec_len && src_vec[j] as char != '\'' {
                     j += 1;
                 }
-                let string = String::from_utf8_lossy(&src_vec[i..=j]).to_string();
+                let string = String::from_utf8_lossy(&src_vec[(i + 1)..j]).to_string();
                 i = j;
                 Token::String(string)
             }
             '&' => Token::Type(Type::Oper(Oper::And)),
             '|' => Token::Type(Type::Oper(Oper::Or)),
-            '<' => Token::Type(Type::Punct(Punct::Less)),
-            '>' => Token::Type(Type::Punct(Punct::Greater)),
+            '<' => Token::Type(Type::Punct(Punct::LAngleB)),
+            '>' => Token::Type(Type::Punct(Punct::RAngleB)),
             ',' => Token::Type(Type::Punct(Punct::Comma)),
             '(' => Token::Type(Type::Punct(Punct::LPar)),
             ')' => Token::Type(Type::Punct(Punct::RPar)),

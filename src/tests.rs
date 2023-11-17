@@ -3,10 +3,10 @@ fn _test_(src: &str) -> Vec<Entry> {
     let tokens = tokenize(src.to_string());
     let mut interfaces = parse_interfaces(tokens);
     for i in interfaces.iter_mut() {
-        value_walk(i, parse_generics);
+        for_each_value(i, parse_generics);
     }
     for i in interfaces.iter_mut() {
-        value_walk(i, parse_arrays);
+        for_each_value(i, parse_arrays);
     }
     for i in interfaces.iter_mut() {
         parse_and(i);
