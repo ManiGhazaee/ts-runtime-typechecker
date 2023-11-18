@@ -12,6 +12,7 @@ pub enum Token {
     Export,
     Colon,
     Eq,
+    Dash,
     Slash,
     Comment,
     EOE, // EndOfEntry
@@ -23,6 +24,7 @@ pub enum Type {
     Custom(String),
     Oper(Oper),
     StringLit(String),
+    NumberLit(String),
     Punct(Punct),
     True,
     False,
@@ -32,6 +34,9 @@ pub enum Type {
     Boolean,
     Null,
     Undefined,
+    Function,
+    Symbol,
+    BigInt,
     Any,
 }
 
@@ -49,7 +54,7 @@ pub enum Punct {
     RBrack,
     LPar,
     RPar,
-    Comma,
+    // Comma,
     LAngleB,
     RAngleB,
 }
@@ -106,6 +111,7 @@ pub fn tokenize(src: String) -> Vec<Token> {
             }
             '&' => Token::Type(Type::Oper(Oper::And)),
             '|' => Token::Type(Type::Oper(Oper::Or)),
+            '-' => Token::Dash,
             '<' => Token::Type(Type::Punct(Punct::LAngleB)),
             '>' => Token::Type(Type::Punct(Punct::RAngleB)),
             // ',' => Token::Type(Type::Punct(Punct::Comma)),
@@ -149,7 +155,7 @@ pub fn tokenize(src: String) -> Vec<Token> {
                     let mut _c = c;
                     let mut temp: String = String::new();
                     let mut j: usize = i;
-                    while !is_skippable(&_c) && _c.is_numeric() {
+                    while (!is_skippable(&_c) && _c.is_numeric()) || _c == '_' {
                         temp += _c.to_string().as_str();
                         j += 1;
                         if j == src_vec_len {
@@ -158,7 +164,7 @@ pub fn tokenize(src: String) -> Vec<Token> {
                         _c = src_vec[j] as char;
                     }
                     i = j - 1;
-                    Token::Number(temp.parse().unwrap())
+                    Token::Number(temp.replace("_", "").parse().unwrap())
                 } else {
                     Token::Undefined(c.to_string())
                 }

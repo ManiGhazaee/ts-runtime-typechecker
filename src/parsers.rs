@@ -48,8 +48,7 @@ pub enum JSToken {
     String(String),
     Id(String),
     Addr(Addr),
-    PosNumber(usize),
-    // NegNumber(usize),
+    Number(String),
     ArrayIsArray(Addr),
     ObjectKeysLength(Addr),
     AddrLength(Addr),
@@ -115,6 +114,25 @@ pub fn parse_interfaces(mut tokens: Vec<Token>) -> Vec<Entry> {
                 tokens.insert(i, Token::EOE);
                 i += 1;
             }
+        }
+        i += 1;
+    }
+
+    let mut i = 1;
+    while i < tokens.len() {
+        match tokens[i] {
+            Token::Number(n) => {
+                if let Token::Dash = tokens[i - 1] {
+                    tokens.splice(
+                        (i - 1)..=i,
+                        [Token::Type(Type::NumberLit("-".to_string() + n.to_string().as_str()))],
+                    );
+                    i -= 1;
+                } else {
+                    tokens[i] = Token::Type(Type::NumberLit(n.to_string()));
+                }
+            }
+            _ => (),
         }
         i += 1;
     }
@@ -591,7 +609,10 @@ pub fn x(value: Value, addr: Vec<String>) -> Vec<JSToken> {
                     vec![JSToken::And],
                     loose_not_eq(JSToken::Addr(addr.clone()), JSToken::Null),
                     vec![JSToken::And],
-                    strict_eq(JSToken::ObjectKeysLength(addr.clone()), JSToken::PosNumber(entries_len)),
+                    strict_eq(
+                        JSToken::ObjectKeysLength(addr.clone()),
+                        JSToken::Number(entries_len.to_string()),
+                    ),
                     token_vec,
                 ]
                 .concat();
@@ -629,7 +650,10 @@ pub fn x(value: Value, addr: Vec<String>) -> Vec<JSToken> {
 
                 let res = [
                     vec![JSToken::LPar, JSToken::ArrayIsArray(addr.clone()), JSToken::And],
-                    strict_eq(JSToken::AddrLength(addr.clone()), JSToken::PosNumber(e.value.len())),
+                    strict_eq(
+                        JSToken::AddrLength(addr.clone()),
+                        JSToken::Number(e.value.len().to_string()),
+                    ),
                     vec![JSToken::And],
                     token_vec,
                     vec![JSToken::RPar],
@@ -647,6 +671,7 @@ pub fn x(value: Value, addr: Vec<String>) -> Vec<JSToken> {
         Value::Type(Type::True) => return strict_eq(JSToken::Addr(addr), JSToken::True),
         Value::Type(Type::Null) => return strict_eq(JSToken::Addr(addr), JSToken::Null),
         Value::Type(Type::StringLit(str)) => return strict_eq(JSToken::Addr(addr), JSToken::String(str)),
+        Value::Type(Type::NumberLit(str)) => return strict_eq(JSToken::Addr(addr), JSToken::Number(str)),
         Value::Type(Type::Custom(_)) => typeof_token_vec(addr, JSType::Object),
         _ => vec![JSToken::None],
     }
@@ -676,7 +701,7 @@ pub fn js_tokens_to_string(mut tokens: Vec<JSToken>) -> String {
             JSToken::String(s) => format!("\"{}\"", s.clone()),
             JSToken::Addr(addr) => addr_to_string(addr.clone()),
             JSToken::Id(id) => id.clone(),
-            JSToken::PosNumber(n) => n.to_string(),
+            JSToken::Number(n) => n.clone(),
             JSToken::EqEq => "==".to_string(),
             JSToken::EqEqEq => "===".to_string(),
             JSToken::NotEq => "!=".to_string(),
