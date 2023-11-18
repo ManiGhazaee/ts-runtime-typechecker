@@ -20,5 +20,5 @@
 // }
 
 interface AnotherType {
-    _1: Array<Array<number>> | string;
+    _1: [number, [number, string]];
 }

@@ -108,7 +108,7 @@ pub fn tokenize(src: String) -> Vec<Token> {
             '|' => Token::Type(Type::Oper(Oper::Or)),
             '<' => Token::Type(Type::Punct(Punct::LAngleB)),
             '>' => Token::Type(Type::Punct(Punct::RAngleB)),
-            ',' => Token::Type(Type::Punct(Punct::Comma)),
+            // ',' => Token::Type(Type::Punct(Punct::Comma)),
             '(' => Token::Type(Type::Punct(Punct::LPar)),
             ')' => Token::Type(Type::Punct(Punct::RPar)),
             '[' => Token::Type(Type::Punct(Punct::LBrack)),

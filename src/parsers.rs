@@ -16,7 +16,7 @@ pub enum Key {
     Or,
     And,
     None,
-    // Tuple,
+    Tuple,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -414,6 +414,55 @@ pub fn parse_parens(entry: &mut Entry) {
     }
 }
 
+pub fn parse_tuples(entry: &mut Entry) {
+    let mut i = 0;
+    while i < entry.value.len() {
+        match &mut entry.value[i] {
+            Value::Entry(e) => {
+                parse_tuples(e);
+            }
+            Value::Type(t) => match t {
+                Type::Punct(Punct::LBrack) => {
+                    let start = i;
+                    let end: usize;
+                    let mut j = i + 1;
+                    let mut brack_count = 1;
+                    let mut value: Vec<Value> = Vec::new();
+                    while j < entry.value.len() {
+                        match &mut entry.value[j] {
+                            Value::Type(Type::Punct(Punct::LBrack)) => {
+                                brack_count += 1;
+                                value.push(Value::Type(Type::Punct(Punct::LBrack)));
+                            }
+                            Value::Type(Type::Punct(Punct::RBrack)) => {
+                                brack_count -= 1;
+                                if brack_count == 0 {
+                                    end = j;
+                                    entry
+                                        .value
+                                        .splice(start..=end, [Value::Entry(Entry { key: Key::Tuple, value })]);
+                                    if let Value::Entry(e) = &mut entry.value[i] {
+                                        parse_tuples(e);
+                                    }
+                                    break;
+                                } else {
+                                    value.push(Value::Type(Type::Punct(Punct::RBrack)));
+                                }
+                            }
+                            t => {
+                                value.push(t.clone());
+                            }
+                        }
+                        j += 1;
+                    }
+                }
+                _ => (),
+            },
+        }
+        i += 1;
+    }
+}
+
 pub fn parse_and(entry: &mut Entry) {
     let mut i = 0;
     while i < entry.value.len() {
@@ -554,6 +603,31 @@ pub fn x(value: Value, addr: Vec<String>) -> Vec<JSToken> {
                 // let res = [vec![JSToken::LPar], token_vec, vec![JSToken::RPar]].concat();
                 // return res;
                 return token_vec;
+            }
+            Key::Tuple => {
+                let mut token_vec: Vec<JSToken> = e
+                    .value
+                    .iter()
+                    .enumerate()
+                    .map(|i| {
+                        vec![
+                            x(i.1.clone(), [addr.clone(), vec![i.0.to_string()]].concat()),
+                            vec![JSToken::And],
+                        ]
+                    })
+                    .flatten()
+                    .flatten()
+                    .collect();
+
+                token_vec.pop(); // remove last And
+
+                let res = [
+                    vec![JSToken::LPar, JSToken::ArrayIsArray(addr.clone()), JSToken::And],
+                    token_vec,
+                    vec![JSToken::RPar],
+                ]
+                .concat();
+                return res;
             }
         },
         Value::Type(Type::Number) => return typeof_token_vec(addr, JSType::Number),

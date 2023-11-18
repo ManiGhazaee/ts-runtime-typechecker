@@ -1,1 +1,1 @@
-export function isAnotherType(o: unknown): o is AnotherType{return(o!=null&&typeof o==="object"&&Object.keys(o).length===1&&"_1"in o&&((Array.isArray(o["_1"])&&(Array.isArray(o["_1"]["0"])&&typeof o["_1"]["0"]["0"]==="number"))||typeof o["_1"]==="string"))}
+export function isAnotherType(o: unknown): o is AnotherType{return(o!=null&&typeof o==="object"&&Object.keys(o).length===1&&"_1"in o&&(Array.isArray(o["_1"])&&typeof o["_1"]["0"]==="number"&&(Array.isArray(o["_1"]["1"])&&typeof o["_1"]["1"]["0"]==="number"&&typeof o["_1"]["1"]["1"]==="string")))}

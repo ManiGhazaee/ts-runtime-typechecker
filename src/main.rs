@@ -3,7 +3,7 @@ use crate::js::{function_dec, return_body};
 use crate::lexer::tokenize;
 use crate::parsers::{
     for_each_value, js_tokens_to_string, parse_and, parse_arrays, parse_generics, parse_interfaces, parse_or,
-    parse_parens, x, Key,
+    parse_parens, x, Key, parse_tuples,
 };
 use std::time::Instant;
 use std::{env, fs};
@@ -34,6 +34,7 @@ fn main() {
     interfaces.iter_mut().for_each(|i| parse_parens(i));
     interfaces.iter_mut().for_each(|i| parse_and(i));
     interfaces.iter_mut().for_each(|i| parse_or(i));
+    interfaces.iter_mut().for_each(|i| parse_tuples(i));
     // println!("{:#?}", interfaces);
 
     let string: String = interfaces
@@ -50,8 +51,7 @@ fn main() {
                 .into_iter()
                 .map(|j| {
                     let all = x(j, vec!["o".to_string()]);
-                    let string = js_tokens_to_string(all);
-                    string
+                    js_tokens_to_string(all)
                 })
                 .collect::<Vec<String>>()
                 .join("");
