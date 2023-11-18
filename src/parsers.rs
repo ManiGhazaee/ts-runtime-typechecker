@@ -321,7 +321,10 @@ pub fn parse_generics(value: &mut Vec<Value>) -> () {
             let mut count = 1;
             while j < value.len() {
                 match &value[j] {
-                    Value::Type(Type::Punct(Punct::LAngleB)) => count += 1,
+                    Value::Type(Type::Punct(Punct::LAngleB)) => {
+                        args.push(Value::Type(Type::Punct(Punct::LAngleB)));
+                        count += 1;
+                    }
                     Value::Type(Type::Punct(Punct::RAngleB)) => {
                         count -= 1;
                         if count == 0 && args.len() > 0 {
@@ -333,10 +336,14 @@ pub fn parse_generics(value: &mut Vec<Value>) -> () {
                                     value: args.clone(),
                                 })],
                             );
+                            if let Value::Entry(e) = &mut value[start] {
+                                parse_generics(&mut e.value);
+                            }
                             break;
                         } else if count == 0 && args.len() == 0 {
                             panic!("why?");
                         }
+                        args.push(Value::Type(Type::Punct(Punct::RAngleB)));
                     }
                     t => {
                         args.push(t.clone());

@@ -16,10 +16,10 @@ mod tests;
 fn main() {
     let inst = Instant::now();
     let args: Vec<String> = env::args().collect();
-    let file_path = args.get(1).expect("ERROR: File path not provided");
-    let write_path = args.get(2).expect("ERROR: Write file path not provided");
+    let file_path = args.get(1).expect("File path not provided");
+    let write_path = args.get(2).expect("Write file path not provided");
     let src =
-        fs::read_to_string(file_path).expect(&format!("ERROR: Something went wrong reading file at {}", file_path));
+        fs::read_to_string(file_path).expect(&format!("Something went wrong reading file at {}", file_path));
     let tokens = tokenize(src);
     let mut interfaces = parse_interfaces(tokens);
 
@@ -37,7 +37,7 @@ fn main() {
             let interface_name = if let Key::Name(name) = i.key {
                 name
             } else {
-                panic!("ERROR: Name of interface not found");
+                panic!("Name of interface not found");
             };
             let string = i
                 .value
@@ -57,7 +57,7 @@ fn main() {
 
     // println!("{}", string);
 
-    fs::write(write_path, string).expect("ERROR: Something went wrong with writing file");
+    fs::write(write_path, string).expect("Something went wrong with writing file");
 
-    println!("    Finished writing at [{write_path}] in {}ms", inst.elapsed().as_millis());
+    println!("    Finished Successfully in {}ms", inst.elapsed().as_millis());
 }
