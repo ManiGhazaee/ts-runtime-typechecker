@@ -148,7 +148,10 @@ pub fn tokenize(src: String) -> Vec<Token> {
                         "boolean" => Token::Type(Type::Boolean),
                         "null" => Token::Type(Type::Null),
                         "undefined" => Token::Type(Type::Undefined),
+                        "symbol" => Token::Type(Type::Symbol),
+                        "bigint" => Token::Type(Type::BigInt),
                         "any" => Token::Type(Type::Any),
+                        "Function" => Token::Type(Type::Function),
                         _ => Token::Id(temp),
                     }
                 } else if c.is_numeric() {
