@@ -1,3 +1,4 @@
+use crate::cmd::{get_extension, USAGE};
 use crate::js::{function_dec, return_body};
 use crate::lexer::tokenize;
 use crate::parsers::{
@@ -7,6 +8,7 @@ use crate::parsers::{
 use std::time::Instant;
 use std::{env, fs};
 
+mod cmd;
 mod js;
 mod lexer;
 mod macros;
@@ -16,10 +18,14 @@ mod tests;
 fn main() {
     let inst = Instant::now();
     let args: Vec<String> = env::args().collect();
-    let file_path = args.get(1).expect("File path not provided");
-    let write_path = args.get(2).expect("Write file path not provided");
-    let src =
-        fs::read_to_string(file_path).expect(&format!("Something went wrong reading file at {}", file_path));
+    let (file_path, write_path) = if let (Some(f), Some(w)) = (args.get(1), args.get(2)) {
+        (f, w)
+    } else {
+        eprintln!("{}", USAGE);
+        return;
+    };
+    let write_path_extension = get_extension(write_path.clone());
+    let src = fs::read_to_string(file_path).unwrap();
     let tokens = tokenize(src);
     let mut interfaces = parse_interfaces(tokens);
 
@@ -50,7 +56,7 @@ fn main() {
                 .collect::<Vec<String>>()
                 .join("");
             let return_body = return_body(entries_len, string);
-            format!("{}\n", function_dec(interface_name, return_body))
+            format!("{}\n", function_dec(interface_name, return_body, write_path_extension))
         })
         .collect::<Vec<String>>()
         .join("\n");
@@ -59,5 +65,5 @@ fn main() {
 
     fs::write(write_path, string).expect("Something went wrong with writing file");
 
-    println!("    Finished Successfully in {}ms", inst.elapsed().as_millis());
+    println!("Finished Successfully in {}ms", inst.elapsed().as_millis());
 }
