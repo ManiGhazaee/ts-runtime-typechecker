@@ -19,6 +19,6 @@
 //     _13: Array<string>[];
 // }
 
-interface AnotherType {
-    _1: [number, [number, string]];
+interface Inter {
+    _1: [{ _2: number }][][];
 }

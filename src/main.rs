@@ -30,12 +30,13 @@ fn main() {
     let mut interfaces = parse_interfaces(tokens);
 
     interfaces.iter_mut().for_each(|i| for_each_value(i, parse_generics));
+    interfaces.iter_mut().for_each(|i| parse_tuples(i));
+    println!("{:#?}", interfaces);
     interfaces.iter_mut().for_each(|i| for_each_value(i, parse_arrays));
     interfaces.iter_mut().for_each(|i| parse_parens(i));
     interfaces.iter_mut().for_each(|i| parse_and(i));
     interfaces.iter_mut().for_each(|i| parse_or(i));
-    interfaces.iter_mut().for_each(|i| parse_tuples(i));
-    // println!("{:#?}", interfaces);
+    println!("{:#?}", interfaces);
 
     let string: String = interfaces
         .into_iter()

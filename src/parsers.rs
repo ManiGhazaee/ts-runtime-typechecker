@@ -52,6 +52,7 @@ pub enum JSToken {
     // NegNumber(usize),
     ArrayIsArray(Addr),
     ObjectKeysLength(Addr),
+    AddrLength(Addr),
     JSType(JSType),
     EqEq,
     EqEqEq,
@@ -221,6 +222,9 @@ pub fn parse_interfaces(mut tokens: Vec<Token>) -> Vec<Entry> {
 }
 
 pub fn parse_arrays(value: &mut Vec<Value>) -> () {
+    if value.len() == 0 {
+        return;
+    }
     let mut i = value.len() - 1;
     while i > 0 {
         if let (&Value::Type(Type::Punct(Punct::LBrack)), &Value::Type(Type::Punct(Punct::RBrack))) =
@@ -312,7 +316,7 @@ pub fn parse_generics(value: &mut Vec<Value>) -> () {
                     "Array" => Generic::Array,
                     _ => Generic::Custom(str.clone()),
                 },
-                _ => panic!("ERROR: Unexpected generic name"),
+                _ => panic!("Unexpected generic name"),
             };
             let start = i - 1;
             let end: usize;
@@ -423,6 +427,10 @@ pub fn parse_tuples(entry: &mut Entry) {
             }
             Value::Type(t) => match t {
                 Type::Punct(Punct::LBrack) => {
+                    if let Value::Type(Type::Punct(Punct::RBrack)) = entry.value[i + 1] {
+                        i += 1;
+                        continue;
+                    }
                     let start = i;
                     let end: usize;
                     let mut j = i + 1;
@@ -584,8 +592,6 @@ pub fn x(value: Value, addr: Vec<String>) -> Vec<JSToken> {
                     loose_not_eq(JSToken::Addr(addr.clone()), JSToken::Null),
                     vec![JSToken::And],
                     strict_eq(JSToken::ObjectKeysLength(addr.clone()), JSToken::PosNumber(entries_len)),
-                    vec![JSToken::And],
-                    loose_not_eq(JSToken::Addr(addr.clone()), JSToken::Null),
                     token_vec,
                 ]
                 .concat();
@@ -623,6 +629,8 @@ pub fn x(value: Value, addr: Vec<String>) -> Vec<JSToken> {
 
                 let res = [
                     vec![JSToken::LPar, JSToken::ArrayIsArray(addr.clone()), JSToken::And],
+                    strict_eq(JSToken::AddrLength(addr.clone()), JSToken::PosNumber(e.value.len())),
+                    vec![JSToken::And],
                     token_vec,
                     vec![JSToken::RPar],
                 ]
@@ -685,6 +693,7 @@ pub fn js_tokens_to_string(mut tokens: Vec<JSToken>) -> String {
             JSToken::Null => "null".to_string(),
             JSToken::None => "".to_string(),
             JSToken::ArrayIsArray(addr) => format!("Array.isArray({})", addr_to_string(addr.clone())),
+            JSToken::AddrLength(addr) => format!("{}.length", addr_to_string(addr.clone())),
             JSToken::ObjectKeysLength(addr) => format!("Object.keys({}).length", addr_to_string(addr.clone())),
             JSToken::JSType(t) => String::from(match t {
                 JSType::String => "\"string\"",
