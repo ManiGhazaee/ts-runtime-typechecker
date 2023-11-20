@@ -20,5 +20,14 @@
 // }
 
 interface Inter {
-    _1: [{ _2: -20 | Function }][][];
+    _1: number | string & object;
+    _2: X;
+}
+
+interface X {
+    key: number;
+}
+
+interface X {
+    key_2: string | "string";
 }

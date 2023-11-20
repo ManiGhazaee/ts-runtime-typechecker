@@ -1,4 +1,5 @@
-use std::vec;
+use core::panic;
+use std::{clone, vec};
 
 use crate::lexer::{Oper, Punct, Token, Type};
 
@@ -748,4 +749,61 @@ fn addr_to_string(addr: Addr) -> String {
         temp.push(format!("[{}]", format!("\"{}\"", addr[i])));
     }
     return temp.join("");
+}
+
+pub fn parse_custom_types(entry: &mut Entry, interfaces: &Vec<Entry>) {
+    let mut i = 0;
+    while i < entry.value.len() {
+        let current = &mut entry.value[i];
+        match current {
+            Value::Entry(e) => {
+                parse_custom_types(e, interfaces);
+            }
+            Value::Type(Type::Custom(custom_type)) => {
+                let custom_type_clone = custom_type.clone();
+                for j in interfaces {
+                    if let Key::Name(interface_name) = &j.key {
+                        if interface_name.clone() == custom_type_clone {
+                            let new = Value::Entry(Entry {
+                                key: Key::None,
+                                value: j.value.clone(),
+                            })
+                            .clone();
+                            *current = new;
+                        }
+                    }
+                }
+            }
+            _ => (),
+        }
+        i += 1;
+    }
+}
+
+pub fn merge_interfaces(interfaces: &mut Vec<Entry>) {
+    let mut i = 0;
+    while i < interfaces.len() {
+        let current_name = if let Key::Name(str) = &interfaces[i].key {
+            str.clone()
+        } else {
+            panic!("Not possible");
+        };
+        let mut j = i + 1;
+        while j < interfaces.len() {
+            if let Key::Name(str) = &interfaces[j].key {
+                if str.clone() == current_name {
+                    for k in 0..interfaces[j].value.len() {
+                        let clone = interfaces[j].clone().value[k].clone();
+                        interfaces[i].value.push(clone);
+                    }
+                    interfaces.remove(j);
+                    j -= 1;
+                } 
+            } else {
+                panic!("Not possible too");
+            }
+            j += 1;
+        }
+        i += 1;
+    }
 }

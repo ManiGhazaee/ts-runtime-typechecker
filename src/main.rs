@@ -2,8 +2,8 @@ use crate::cmd::{get_extension, USAGE};
 use crate::js::{function_dec, return_body};
 use crate::lexer::tokenize;
 use crate::parsers::{
-    for_each_value, js_tokens_to_string, parse_and, parse_arrays, parse_generics, parse_interfaces, parse_or,
-    parse_parens, x, Key, parse_tuples,
+    for_each_value, js_tokens_to_string, merge_interfaces, parse_and, parse_arrays, parse_custom_types, parse_generics,
+    parse_interfaces, parse_or, parse_parens, parse_tuples, x, Key,
 };
 use std::time::Instant;
 use std::{env, fs};
@@ -27,15 +27,22 @@ fn main() {
     let write_path_extension = get_extension(write_path.clone());
     let src = fs::read_to_string(file_path).unwrap();
     let tokens = tokenize(src);
+    println!("{:#?}", tokens);
     let mut interfaces = parse_interfaces(tokens);
 
     interfaces.iter_mut().for_each(|i| for_each_value(i, parse_generics));
     interfaces.iter_mut().for_each(|i| parse_tuples(i));
-    println!("{:#?}", interfaces);
     interfaces.iter_mut().for_each(|i| for_each_value(i, parse_arrays));
     interfaces.iter_mut().for_each(|i| parse_parens(i));
     interfaces.iter_mut().for_each(|i| parse_and(i));
     interfaces.iter_mut().for_each(|i| parse_or(i));
+
+    let interfaces_clone = interfaces.clone();
+    interfaces
+        .iter_mut()
+        .for_each(|i| parse_custom_types(i, &interfaces_clone));
+
+    merge_interfaces(&mut interfaces);
     println!("{:#?}", interfaces);
 
     let string: String = interfaces
