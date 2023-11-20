@@ -1,5 +1,5 @@
 use core::panic;
-use std::{clone, vec};
+use std::vec;
 
 use crate::lexer::{Oper, Punct, Token, Type};
 
@@ -12,6 +12,7 @@ pub enum Value {
 #[derive(Debug, Clone, PartialEq)]
 pub enum Key {
     Name(String),
+    Optional(String),
     Generic(Generic),
     Paren,
     Or,
@@ -91,7 +92,7 @@ fn add_type_value_to_last(stack: &mut Vec<Entry>, _type: &Type) -> () {
 pub fn parse_interfaces(mut tokens: Vec<Token>) -> Vec<Entry> {
     let mut i = 0;
     while i < tokens.len() - 1 {
-        if let Token::Colon = tokens[i + 1] {
+        if let Token::Colon | Token::QM = tokens[i + 1] {
             let mut has_matched = true;
             match &tokens[i] {
                 Token::Id(str) | Token::String(str) => tokens[i] = Token::Key(str.to_string()),
@@ -210,10 +211,18 @@ pub fn parse_interfaces(mut tokens: Vec<Token>) -> Vec<Entry> {
                 }
             }
             Token::Key(str) => {
-                stack.push(Entry {
-                    key: Key::Name(str.to_string()),
-                    value: Vec::new(),
-                });
+                if let Some(Token::QM) = tokens.get(i + 1) {
+                    stack.push(Entry {
+                        key: Key::Optional(str.to_string()),
+                        value: Vec::new(),
+                    });
+                    i += 1;
+                } else {
+                    stack.push(Entry {
+                        key: Key::Name(str.to_string()),
+                        value: Vec::new(),
+                    });
+                };
             }
             Token::Type(Type::Punct(Punct::LBrace)) => {
                 let entry = Entry {
@@ -567,6 +576,33 @@ pub fn x(value: Value, addr: Vec<String>) -> Vec<JSToken> {
                 .concat();
                 return res;
             }
+            Key::Optional(n) => {
+                let new_addr = [addr.clone(), vec![n.clone()]].concat();
+                let token_vec: Vec<JSToken> = e
+                    .value
+                    .iter()
+                    .map(|val| x(val.clone(), new_addr.clone()))
+                    .into_iter()
+                    .flatten()
+                    .collect();
+                let res = [
+                    vec![JSToken::And],
+                    vec![JSToken::LPar],
+                    vec![
+                        JSToken::String(n.clone()),
+                        JSToken::In,
+                        JSToken::Addr(addr.clone()),
+                        JSToken::EqEqEq,
+                        JSToken::False,
+                    ],
+                    vec![JSToken::Or],
+                    vec![JSToken::String(n), JSToken::In, JSToken::Addr(addr), JSToken::And],
+                    token_vec.clone(),
+                    vec![JSToken::RPar],
+                ]
+                .concat();
+                return res;
+            }
             Key::Generic(g) => match g {
                 Generic::Custom(_) => vec![JSToken::None],
                 Generic::Array => {
@@ -609,7 +645,7 @@ pub fn x(value: Value, addr: Vec<String>) -> Vec<JSToken> {
                     .flatten()
                     .collect();
                 let res = [
-                    typeof_token_vec(addr.clone(), JSType::Object),
+                    typeof_token(addr.clone(), JSType::Object),
                     vec![JSToken::And],
                     loose_not_eq(JSToken::Addr(addr.clone()), JSToken::Null),
                     vec![JSToken::And],
@@ -666,25 +702,25 @@ pub fn x(value: Value, addr: Vec<String>) -> Vec<JSToken> {
                 return res;
             }
         },
-        Value::Type(Type::Number) => return typeof_token_vec(addr, JSType::Number),
-        Value::Type(Type::String) => return typeof_token_vec(addr, JSType::String),
-        Value::Type(Type::Object) => return typeof_token_vec(addr, JSType::Object),
-        Value::Type(Type::Boolean) => return typeof_token_vec(addr, JSType::Boolean),
-        Value::Type(Type::Undefined) => return typeof_token_vec(addr, JSType::Undefined),
-        Value::Type(Type::Function) => return typeof_token_vec(addr, JSType::Function),
-        Value::Type(Type::Symbol) => return typeof_token_vec(addr, JSType::Symbol),
-        Value::Type(Type::BigInt) => return typeof_token_vec(addr, JSType::BigInt),
+        Value::Type(Type::Number) => return typeof_token(addr, JSType::Number),
+        Value::Type(Type::String) => return typeof_token(addr, JSType::String),
+        Value::Type(Type::Object) => return typeof_token(addr, JSType::Object),
+        Value::Type(Type::Boolean) => return typeof_token(addr, JSType::Boolean),
+        Value::Type(Type::Undefined) => return typeof_token(addr, JSType::Undefined),
+        Value::Type(Type::Function) => return typeof_token(addr, JSType::Function),
+        Value::Type(Type::Symbol) => return typeof_token(addr, JSType::Symbol),
+        Value::Type(Type::BigInt) => return typeof_token(addr, JSType::BigInt),
         Value::Type(Type::False) => return strict_eq(JSToken::Addr(addr), JSToken::False),
         Value::Type(Type::True) => return strict_eq(JSToken::Addr(addr), JSToken::True),
         Value::Type(Type::Null) => return strict_eq(JSToken::Addr(addr), JSToken::Null),
         Value::Type(Type::StringLit(str)) => return strict_eq(JSToken::Addr(addr), JSToken::String(str)),
         Value::Type(Type::NumberLit(str)) => return strict_eq(JSToken::Addr(addr), JSToken::Number(str)),
-        Value::Type(Type::Custom(_)) => typeof_token_vec(addr, JSType::Object),
+        Value::Type(Type::Custom(_)) => typeof_token(addr, JSType::Object),
         _ => vec![JSToken::None],
     }
 }
 
-fn typeof_token_vec(addr: Addr, js_type: JSType) -> Vec<JSToken> {
+fn typeof_token(addr: Addr, js_type: JSType) -> Vec<JSToken> {
     vec![
         JSToken::Typeof,
         JSToken::Addr(addr),
@@ -798,7 +834,7 @@ pub fn merge_interfaces(interfaces: &mut Vec<Entry>) {
                     }
                     interfaces.remove(j);
                     j -= 1;
-                } 
+                }
             } else {
                 panic!("Not possible too");
             }

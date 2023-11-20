@@ -19,15 +19,8 @@
 //     _13: Array<string>[];
 // }
 
-interface Inter {
-    _1: number | string & object;
-    _2: X;
-}
-
-interface X {
-    key: number;
-}
-
-interface X {
-    key_2: string | "string";
+interface User1 {
+    id: number;
+    username: string;
+    email?: string;
 }

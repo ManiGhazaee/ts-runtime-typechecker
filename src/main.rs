@@ -27,7 +27,6 @@ fn main() {
     let write_path_extension = get_extension(write_path.clone());
     let src = fs::read_to_string(file_path).unwrap();
     let tokens = tokenize(src);
-    println!("{:#?}", tokens);
     let mut interfaces = parse_interfaces(tokens);
 
     interfaces.iter_mut().for_each(|i| for_each_value(i, parse_generics));

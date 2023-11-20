@@ -15,6 +15,7 @@ pub enum Token {
     Dash,
     Slash,
     Comment,
+    QM, // QuestionMark
     EOE, // EndOfEntry
     EOF, // EndOfFile
 }
@@ -121,8 +122,9 @@ pub fn tokenize(src: String) -> Vec<Token> {
             ']' => Token::Type(Type::Punct(Punct::RBrack)),
             '{' => Token::Type(Type::Punct(Punct::LBrace)),
             '}' => Token::Type(Type::Punct(Punct::RBrace)),
-            ':' => Token::Colon,
             '=' => Token::Eq,
+            ':' => Token::Colon,
+            '?' => Token::QM,
             _ => {
                 if c.is_alphabetic() || c == '_' {
                     let mut _c = c;
