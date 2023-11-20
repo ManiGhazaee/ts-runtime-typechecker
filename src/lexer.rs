@@ -126,11 +126,11 @@ pub fn tokenize(src: String) -> Vec<Token> {
             ':' => Token::Colon,
             '?' => Token::QM,
             _ => {
-                if c.is_alphabetic() || c == '_' {
+                if c.is_alphabetic() || c == '_' || c == '$' {
                     let mut _c = c;
                     let mut temp: String = String::new();
                     let mut j: usize = i;
-                    while (!is_skippable(&_c) && _c.is_alphanumeric()) || _c == '_' {
+                    while (!is_skippable(&_c) && _c.is_alphanumeric()) || _c == '_' || _c == '$' {
                         temp += _c.to_string().as_str();
                         j += 1;
                         if j == src_vec_len {

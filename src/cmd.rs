@@ -1,9 +1,22 @@
+use std::env;
+
 #[derive(Copy, Clone)]
 pub enum Extension {
     JS,
     TS,
     DTS,
 }
+
+pub fn input() -> (String, String, Extension) {
+    let args: Vec<String> = env::args().collect();
+    if let (Some(f), Some(w)) = (args.get(1), args.get(2)) {
+        (f.clone(), w.clone(), get_extension(w.clone()))
+    } else {
+        eprintln!("{}", USAGE);
+        panic!();
+    }
+}
+
 pub fn get_extension(file_path: String) -> Extension {
     if file_path.ends_with(".js") {
         return Extension::JS;
