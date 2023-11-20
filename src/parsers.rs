@@ -645,6 +645,7 @@ pub fn x(value: Value, addr: Vec<String>) -> Vec<JSToken> {
                     .flatten()
                     .collect();
                 let res = [
+                    vec![JSToken::LPar],
                     typeof_token(addr.clone(), JSType::Object),
                     vec![JSToken::And],
                     loose_not_eq(JSToken::Addr(addr.clone()), JSToken::Null),
@@ -654,6 +655,7 @@ pub fn x(value: Value, addr: Vec<String>) -> Vec<JSToken> {
                         JSToken::Number(entries_len.to_string()),
                     ),
                     token_vec,
+                    vec![JSToken::RPar],
                 ]
                 .concat();
                 return res;
@@ -806,6 +808,9 @@ pub fn parse_custom_types(entry: &mut Entry, interfaces: &Vec<Entry>) {
                             })
                             .clone();
                             *current = new;
+                            if let Value::Entry(e) = current {
+                                parse_custom_types(e, interfaces);
+                            }
                         }
                     }
                 }

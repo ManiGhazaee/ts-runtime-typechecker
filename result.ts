@@ -1,1 +1,0 @@
-export function isUser1(o: unknown): o is User1{return(o!=null&&typeof o==="object"&&Object.keys(o).length===3&&"id"in o&&typeof o["id"]==="number"&&"username"in o&&typeof o["username"]==="string"&&("email"in o===false||"email"in o&&typeof o["email"]==="string"))}

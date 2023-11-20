@@ -28,7 +28,11 @@ fn main() {
     let src = fs::read_to_string(file_path).unwrap();
     let tokens = tokenize(src);
     let mut interfaces = parse_interfaces(tokens);
+    let interfaces_clone = interfaces.clone();
 
+    interfaces
+        .iter_mut()
+        .for_each(|i| parse_custom_types(i, &interfaces_clone));
     interfaces.iter_mut().for_each(|i| for_each_value(i, parse_generics));
     interfaces.iter_mut().for_each(|i| parse_tuples(i));
     interfaces.iter_mut().for_each(|i| for_each_value(i, parse_arrays));
@@ -36,13 +40,8 @@ fn main() {
     interfaces.iter_mut().for_each(|i| parse_and(i));
     interfaces.iter_mut().for_each(|i| parse_or(i));
 
-    let interfaces_clone = interfaces.clone();
-    interfaces
-        .iter_mut()
-        .for_each(|i| parse_custom_types(i, &interfaces_clone));
-
     merge_interfaces(&mut interfaces);
-    println!("{:#?}", interfaces);
+    // println!("{:#?}", interfaces);
 
     let string: String = interfaces
         .into_iter()

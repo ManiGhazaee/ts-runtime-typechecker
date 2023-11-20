@@ -1,1 +1,0 @@
-export function isAnotherType(o){return(o!=null&&typeof o==="object"&&Object.keys(o).length===1&&"_1"in o&&((Array.isArray(o["_1"])&&(Array.isArray(o["_1"]["0"])&&typeof o["_1"]["0"]["0"]==="number"))||typeof o["_1"]==="string"))}
