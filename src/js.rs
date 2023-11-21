@@ -231,6 +231,7 @@ pub fn to_js_token(value: Value, addr: Vec<String>) -> Vec<JSToken> {
         Value::Type(Type::False) => return strict_eq(JSToken::Addr(addr), JSToken::False),
         Value::Type(Type::True) => return strict_eq(JSToken::Addr(addr), JSToken::True),
         Value::Type(Type::Null) => return strict_eq(JSToken::Addr(addr), JSToken::Null),
+        Value::Type(Type::Any) => return vec![JSToken::True],
         Value::Type(Type::StringLit(str)) => return strict_eq(JSToken::Addr(addr), JSToken::String(str)),
         Value::Type(Type::NumberLit(str)) => return strict_eq(JSToken::Addr(addr), JSToken::Number(str)),
         Value::Type(Type::Custom(_)) => typeof_token(addr, JSType::Object),
