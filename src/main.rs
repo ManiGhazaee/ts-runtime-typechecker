@@ -20,6 +20,7 @@ fn main() {
     let (read_path, write_path, write_path_extension) = input();
     let src = fs::read_to_string(read_path).unwrap();
     let tokens = tokenize(src);
+    dbg!(&tokens);
     let mut interfaces = parse_interfaces(tokens);
     let interfaces_clone = interfaces.clone();
 

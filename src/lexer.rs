@@ -15,7 +15,7 @@ pub enum Token {
     Dash,
     Slash,
     Comment,
-    QM, // QuestionMark
+    QM,  // QuestionMark
     EOE, // EndOfEntry
     EOF, // EndOfFile
 }
@@ -94,16 +94,17 @@ pub fn tokenize(src: String) -> Vec<Token> {
             }
             '"' => {
                 let mut j = i + 1;
-                while j < src_vec_len && src_vec[j] as char != '"' {
+                while j < src_vec_len && (src_vec[j] as char != '"' || src_vec[j - 1] as char == '\\') {
                     j += 1;
                 }
                 let string = String::from_utf8_lossy(&src_vec[(i + 1)..j]).to_string();
+                dbg!(&string);
                 i = j;
                 Token::String(string)
             }
             '\'' => {
                 let mut j = i + 1;
-                while j < src_vec_len && src_vec[j] as char != '\'' {
+                while j < src_vec_len && (src_vec[j] as char != '\'' || src_vec[j - 1] as char == '\\') {
                     j += 1;
                 }
                 let string = String::from_utf8_lossy(&src_vec[(i + 1)..j]).to_string();
