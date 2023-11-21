@@ -71,7 +71,6 @@ pub fn parse_interfaces(mut tokens: Vec<Token>) -> Vec<Entry> {
                     _ => has_matched = false,
                 },
                 Token::Interface => tokens[i] = Token::Key("interface".to_string()),
-                Token::Export => tokens[i] = Token::Key("export".to_string()),
                 _ => has_matched = false,
             }
             if has_matched {

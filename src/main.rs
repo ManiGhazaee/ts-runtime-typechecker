@@ -1,6 +1,6 @@
 use crate::cmd::input;
 use crate::js::interfaces_to_js_string;
-use crate::lexer::tokenize;
+use crate::lexer::{tokenize, find_interfaces};
 use crate::parsers::{
     for_each_value, merge_interfaces, parse_and, parse_arrays, parse_custom_types, parse_generics, parse_interfaces,
     parse_or, parse_parens, parse_tuples,
@@ -19,8 +19,9 @@ fn main() {
     let inst = Instant::now();
     let (read_path, write_path, write_path_extension) = input();
     let src = fs::read_to_string(read_path).unwrap();
+    let src = find_interfaces(src);
     let tokens = tokenize(src);
-    dbg!(&tokens);
+    // dbg!(&tokens);
     let mut interfaces = parse_interfaces(tokens);
     let interfaces_clone = interfaces.clone();
 
@@ -35,10 +36,10 @@ fn main() {
     interfaces.iter_mut().for_each(|i| parse_or(i));
 
     merge_interfaces(&mut interfaces);
-    // println!("{:#?}", interfaces);
+    // dbg!(&interfaces);
 
     let string: String = interfaces_to_js_string(interfaces, write_path_extension);
-    // println!("{}", string);
+    // dbg!(&string);
 
     fs::write(write_path, string).unwrap();
 

@@ -260,7 +260,7 @@ pub fn js_tokens_to_string(mut tokens: Vec<JSToken>) -> String {
     let mut string_vec: Vec<String> = Vec::new();
     for i in tokens.iter_mut() {
         string_vec.push(match i {
-            JSToken::String(s) => format!("\"{}\"", s.clone()),
+            JSToken::String(s) => format!("\"{}\"", escape_double_q( s.clone())),
             JSToken::Addr(addr) => addr_to_string(addr.clone()),
             JSToken::Id(id) => id.clone(),
             JSToken::Number(n) => n.clone(),
@@ -317,4 +317,18 @@ pub fn function_dec(name: String, return_body: String, extension: Extension) -> 
 
 pub fn return_body(entries_len: usize, return_body: String) -> String {
     format!("o!=null&&typeof o===\"object\"&&Object.keys(o).length==={entries_len}{return_body}")
+}
+
+fn escape_double_q(string: String) -> String {
+    let mut string = Vec::from(string);
+    let mut i = 1;
+    while i < string.len() {
+        let c = string[i] as char;
+        if c == '"' {
+            string.insert(i, b'\\');
+            i += 1;
+        }
+        i += 1;
+    } 
+    String::from_utf8(string).unwrap()
 }
