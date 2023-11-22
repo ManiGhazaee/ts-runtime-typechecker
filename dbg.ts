@@ -15,6 +15,7 @@ function sdkjf(sdkj) {
 let skdjf: x = "interface";
 type x = string;
 interface dskj {
+    // {{{{{{{{{{{{{{{{}}}}}}}
     dskjf: { dskfj: 0; kdsjf: { ksdjf: { dksjf: { skdfj: { kdfjs: { ksdj: 8 } } } } } };
 }
 interface j {}

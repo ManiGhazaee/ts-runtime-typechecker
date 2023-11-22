@@ -1,3 +1,5 @@
+use rayon::prelude::{IndexedParallelIterator, IntoParallelIterator, IntoParallelRefIterator, ParallelIterator};
+
 use crate::{
     cmd::Extension,
     lexer::Type,
@@ -48,7 +50,7 @@ type Addr = Vec<String>;
 
 pub fn interfaces_to_js_string(interfaces: Vec<Entry>, write_path_extension: Extension) -> String {
     interfaces
-        .into_iter()
+        .into_par_iter()
         .map(|i| {
             let entries_len = i.value.len();
             let interface_name = if let Key::Name(name) = i.key {
@@ -58,7 +60,7 @@ pub fn interfaces_to_js_string(interfaces: Vec<Entry>, write_path_extension: Ext
             };
             let string = i
                 .value
-                .into_iter()
+                .into_par_iter()
                 .map(|j| {
                     let all = to_js_token(j, vec!["o".to_string()]);
                     js_tokens_to_string(all)
@@ -79,9 +81,9 @@ pub fn to_js_token(value: Value, addr: Vec<String>) -> Vec<JSToken> {
                 let new_addr = [addr.clone(), vec![n.clone()]].concat();
                 let token_vec: Vec<JSToken> = e
                     .value
-                    .iter()
+                    .par_iter()
                     .map(|val| to_js_token(val.clone(), new_addr.clone()))
-                    .into_iter()
+                    .into_par_iter()
                     .flatten()
                     .collect();
                 let res = [
@@ -96,9 +98,9 @@ pub fn to_js_token(value: Value, addr: Vec<String>) -> Vec<JSToken> {
                 let new_addr = [addr.clone(), vec![n.clone()]].concat();
                 let token_vec: Vec<JSToken> = e
                     .value
-                    .iter()
+                    .par_iter()
                     .map(|val| to_js_token(val.clone(), new_addr.clone()))
-                    .into_iter()
+                    .into_par_iter()
                     .flatten()
                     .collect();
                 let res = [
@@ -125,9 +127,9 @@ pub fn to_js_token(value: Value, addr: Vec<String>) -> Vec<JSToken> {
                     let new_addr = [addr.clone(), vec!["0".to_string()]].concat();
                     let token_vec: Vec<JSToken> = e
                         .value
-                        .iter()
+                        .par_iter()
                         .map(|val| to_js_token(val.clone(), new_addr.clone()))
-                        .into_iter()
+                        .into_par_iter()
                         .flatten()
                         .collect();
                     let res = [
@@ -155,9 +157,9 @@ pub fn to_js_token(value: Value, addr: Vec<String>) -> Vec<JSToken> {
                 let entries_len = e.value.len();
                 let token_vec: Vec<JSToken> = e
                     .value
-                    .iter()
+                    .par_iter()
                     .map(|val| to_js_token(val.clone(), addr.clone()))
-                    .into_iter()
+                    .into_par_iter()
                     .flatten()
                     .collect();
                 let res = [
@@ -179,9 +181,9 @@ pub fn to_js_token(value: Value, addr: Vec<String>) -> Vec<JSToken> {
             Key::Paren => {
                 let token_vec = e
                     .value
-                    .iter()
+                    .par_iter()
                     .map(|val| to_js_token(val.clone(), addr.clone()))
-                    .into_iter()
+                    .into_par_iter()
                     .flatten()
                     .collect();
 
@@ -192,7 +194,7 @@ pub fn to_js_token(value: Value, addr: Vec<String>) -> Vec<JSToken> {
             Key::Tuple => {
                 let mut token_vec: Vec<JSToken> = e
                     .value
-                    .iter()
+                    .par_iter()
                     .enumerate()
                     .map(|i| {
                         vec![
@@ -257,10 +259,9 @@ fn loose_not_eq(left: JSToken, right: JSToken) -> Vec<JSToken> {
 }
 
 pub fn js_tokens_to_string(mut tokens: Vec<JSToken>) -> String {
-    let mut string_vec: Vec<String> = Vec::new();
-    for i in tokens.iter_mut() {
-        string_vec.push(match i {
-            JSToken::String(s) => format!("\"{}\"", escape_double_q( s.clone())),
+    tokens.par_iter().map(|i| {
+        match i {
+            JSToken::String(s) => format!("\"{}\"", escape_double_q(s.clone())),
             JSToken::Addr(addr) => addr_to_string(addr.clone()),
             JSToken::Id(id) => id.clone(),
             JSToken::Number(n) => n.clone(),
@@ -293,9 +294,8 @@ pub fn js_tokens_to_string(mut tokens: Vec<JSToken>) -> String {
                 JSType::BigInt => "\"bigint\"",
             }),
             // _ => "".to_string(),
-        })
-    }
-    return string_vec.join("");
+        }
+    }).collect::<Vec<String>>().join("")
 }
 
 fn addr_to_string(addr: Addr) -> String {
@@ -329,6 +329,6 @@ fn escape_double_q(string: String) -> String {
             i += 1;
         }
         i += 1;
-    } 
+    }
     String::from_utf8(string).unwrap()
 }

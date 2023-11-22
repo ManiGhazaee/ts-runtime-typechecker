@@ -1,6 +1,8 @@
 use core::panic;
 use std::vec;
 
+use rayon::prelude::{IntoParallelIterator, ParallelIterator};
+
 use crate::lexer::{Oper, Punct, Token, Type};
 
 #[derive(Debug, Clone, PartialEq)]
@@ -101,7 +103,7 @@ pub fn parse_interfaces(mut tokens: Vec<Token>) -> Vec<Entry> {
     }
 
     tokens = tokens
-        .into_iter()
+        .into_par_iter()
         .filter(|i| if let Token::Undefined(_) = i { false } else { true })
         .collect();
 
@@ -124,7 +126,7 @@ pub fn parse_interfaces(mut tokens: Vec<Token>) -> Vec<Entry> {
     }
 
     tokens = tokens
-        .into_iter()
+        .into_par_iter()
         .map(|i| {
             if let Token::Type(Type::Punct(Punct::RBrace)) = i {
                 Token::EOE

@@ -1,3 +1,5 @@
+use rayon::prelude::{IntoParallelRefMutIterator, ParallelIterator};
+
 use crate::cmd::input;
 use crate::js::interfaces_to_js_string;
 use crate::lexer::{tokenize, find_interfaces};
@@ -26,19 +28,21 @@ fn main() {
     let interfaces_clone = interfaces.clone();
 
     interfaces
-        .iter_mut()
+        .par_iter_mut()
         .for_each(|i| parse_custom_types(i, &interfaces_clone));
-    interfaces.iter_mut().for_each(|i| for_each_value(i, parse_generics));
-    interfaces.iter_mut().for_each(|i| parse_tuples(i));
-    interfaces.iter_mut().for_each(|i| for_each_value(i, parse_arrays));
-    interfaces.iter_mut().for_each(|i| parse_parens(i));
-    interfaces.iter_mut().for_each(|i| parse_and(i));
-    interfaces.iter_mut().for_each(|i| parse_or(i));
+    interfaces.par_iter_mut().for_each(|i| for_each_value(i, parse_generics));
+    interfaces.par_iter_mut().for_each(|i| parse_tuples(i));
+    interfaces.par_iter_mut().for_each(|i| for_each_value(i, parse_arrays));
+    interfaces.par_iter_mut().for_each(|i| parse_parens(i));
+    interfaces.par_iter_mut().for_each(|i| parse_and(i));
+    interfaces.par_iter_mut().for_each(|i| parse_or(i));
 
     merge_interfaces(&mut interfaces);
     // dbg!(&interfaces);
 
+    let inst_ = Instant::now();
     let string: String = interfaces_to_js_string(interfaces, write_path_extension);
+    dbg!(inst_.elapsed().as_micros());
     // dbg!(&string);
 
     fs::write(write_path, string).unwrap();

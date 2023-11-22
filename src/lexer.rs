@@ -121,6 +121,15 @@ pub fn find_interfaces(string: String) -> String {
                                     let (_, end) = string_lit_backtick(&string, k);
                                     k = end;
                                 }
+                                '/' => {
+                                    if string[j + 1] as char == '/' {
+                                        let mut k = j + 1;
+                                        while k < string_len && string[k] as char != '\n' {
+                                            k += 1;
+                                        }
+                                        j = k;
+                                    }
+                                }
                                 _ => {
                                     if c == '{' {
                                         if !first_brace_seen {
