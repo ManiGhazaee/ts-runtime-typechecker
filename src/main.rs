@@ -23,7 +23,6 @@ fn main() {
     let src = fs::read_to_string(read_path).unwrap();
     let src = find_interfaces(src);
     let tokens = tokenize(src);
-    // dbg!(&tokens);
     let mut interfaces = parse_interfaces(tokens);
     let interfaces_clone = interfaces.clone();
 
@@ -36,14 +35,9 @@ fn main() {
     interfaces.par_iter_mut().for_each(|i| parse_parens(i));
     interfaces.par_iter_mut().for_each(|i| parse_and(i));
     interfaces.par_iter_mut().for_each(|i| parse_or(i));
-
     merge_interfaces(&mut interfaces);
-    // dbg!(&interfaces);
 
-    let inst_ = Instant::now();
     let string: String = interfaces_to_js_string(interfaces, write_path_extension);
-    dbg!(inst_.elapsed().as_micros());
-    // dbg!(&string);
 
     fs::write(write_path, string).unwrap();
 

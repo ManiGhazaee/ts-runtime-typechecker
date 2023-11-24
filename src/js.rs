@@ -234,6 +234,7 @@ pub fn to_js_token(value: Value, addr: Vec<String>) -> Vec<JSToken> {
         Value::Type(Type::True) => return strict_eq(JSToken::Addr(addr), JSToken::True),
         Value::Type(Type::Null) => return strict_eq(JSToken::Addr(addr), JSToken::Null),
         Value::Type(Type::Any) => return vec![JSToken::True],
+        Value::Type(Type::Unknown) => return vec![JSToken::True],
         Value::Type(Type::StringLit(str)) => return strict_eq(JSToken::Addr(addr), JSToken::String(str)),
         Value::Type(Type::NumberLit(str)) => return strict_eq(JSToken::Addr(addr), JSToken::Number(str)),
         Value::Type(Type::Custom(_)) => typeof_token(addr, JSType::Object),
@@ -258,44 +259,50 @@ fn loose_not_eq(left: JSToken, right: JSToken) -> Vec<JSToken> {
     vec![left, JSToken::NotEq, right]
 }
 
-pub fn js_tokens_to_string(mut tokens: Vec<JSToken>) -> String {
-    tokens.par_iter().map(|i| {
-        match i {
-            JSToken::String(s) => format!("\"{}\"", escape_double_q(s.clone())),
-            JSToken::Addr(addr) => addr_to_string(addr.clone()),
-            JSToken::Id(id) => id.clone(),
-            JSToken::Number(n) => n.clone(),
-            JSToken::EqEq => "==".to_string(),
-            JSToken::EqEqEq => "===".to_string(),
-            JSToken::NotEq => "!=".to_string(),
-            JSToken::NotEqEq => "!==".to_string(),
-            JSToken::In => "in ".to_string(),
-            JSToken::And => "&&".to_string(),
-            JSToken::Or => "||".to_string(),
-            JSToken::LPar => "(".to_string(),
-            JSToken::RPar => ")".to_string(),
-            JSToken::Typeof => "typeof ".to_string(),
-            JSToken::True => "true".to_string(),
-            JSToken::False => "false".to_string(),
-            JSToken::Undefined => "undefined".to_string(),
-            JSToken::Null => "null".to_string(),
-            JSToken::None => "".to_string(),
-            JSToken::ArrayIsArray(addr) => format!("Array.isArray({})", addr_to_string(addr.clone())),
-            JSToken::AddrLength(addr) => format!("{}.length", addr_to_string(addr.clone())),
-            JSToken::ObjectKeysLength(addr) => format!("Object.keys({}).length", addr_to_string(addr.clone())),
-            JSToken::JSType(t) => String::from(match t {
-                JSType::String => "\"string\"",
-                JSType::Number => "\"number\"",
-                JSType::Function => "\"function\"",
-                JSType::Boolean => "\"boolean\"",
-                JSType::Object => "\"object\"",
-                JSType::Undefined => "\"undefined\"",
-                JSType::Symbol => "\"symbol\"",
-                JSType::BigInt => "\"bigint\"",
-            }),
-            // _ => "".to_string(),
-        }
-    }).collect::<Vec<String>>().join("")
+pub fn js_tokens_to_string(tokens: Vec<JSToken>) -> String {
+    tokens
+        .par_iter()
+        .map(|i| {
+            match i {
+                JSToken::String(s) => {
+                    format!("\"{}\"", escape_double_q(s.clone()))
+                }
+                JSToken::Addr(addr) => addr_to_string(addr.clone()),
+                JSToken::Id(id) => id.clone(),
+                JSToken::Number(n) => n.clone(),
+                JSToken::EqEq => "==".to_string(),
+                JSToken::EqEqEq => "===".to_string(),
+                JSToken::NotEq => "!=".to_string(),
+                JSToken::NotEqEq => "!==".to_string(),
+                JSToken::In => "in ".to_string(),
+                JSToken::And => "&&".to_string(),
+                JSToken::Or => "||".to_string(),
+                JSToken::LPar => "(".to_string(),
+                JSToken::RPar => ")".to_string(),
+                JSToken::Typeof => "typeof ".to_string(),
+                JSToken::True => "true".to_string(),
+                JSToken::False => "false".to_string(),
+                JSToken::Undefined => "undefined".to_string(),
+                JSToken::Null => "null".to_string(),
+                JSToken::None => "".to_string(),
+                JSToken::ArrayIsArray(addr) => format!("Array.isArray({})", addr_to_string(addr.clone())),
+                JSToken::AddrLength(addr) => format!("{}.length", addr_to_string(addr.clone())),
+                JSToken::ObjectKeysLength(addr) => format!("Object.keys({}).length", addr_to_string(addr.clone())),
+                JSToken::JSType(t) => String::from(match t {
+                    JSType::String => "\"string\"",
+                    JSType::Number => "\"number\"",
+                    JSType::Function => "\"function\"",
+                    JSType::Boolean => "\"boolean\"",
+                    JSType::Object => "\"object\"",
+                    JSType::Undefined => "\"undefined\"",
+                    JSType::Symbol => "\"symbol\"",
+                    JSType::BigInt => "\"bigint\"",
+                }),
+                // _ => "".to_string(),
+            }
+        })
+        .collect::<Vec<String>>()
+        .join("")
 }
 
 fn addr_to_string(addr: Addr) -> String {
@@ -321,12 +328,19 @@ pub fn return_body(entries_len: usize, return_body: String) -> String {
 
 fn escape_double_q(string: String) -> String {
     let mut string = Vec::from(string);
-    let mut i = 1;
+    let mut i = 0;
     while i < string.len() {
         let c = string[i] as char;
         if c == '"' {
-            string.insert(i, b'\\');
-            i += 1;
+            if i == 0 {
+                string.insert(i, b'\\');
+                i += 1;
+            } else {
+                if string[i - 1] != b'\\' {
+                    string.insert(i, b'\\');
+                    i += 1;
+                }
+            }
         }
         i += 1;
     }

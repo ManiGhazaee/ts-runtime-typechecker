@@ -39,6 +39,7 @@ pub enum Type {
     Symbol,
     BigInt,
     Any,
+    Unknown,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -247,6 +248,7 @@ pub fn tokenize(src: String) -> Vec<Token> {
                         "symbol" => Token::Type(Type::Symbol),
                         "bigint" => Token::Type(Type::BigInt),
                         "any" => Token::Type(Type::Any),
+                        "unknown" => Token::Type(Type::Unknown),
                         "Function" => Token::Type(Type::Function),
                         _ => Token::Id(temp),
                     }

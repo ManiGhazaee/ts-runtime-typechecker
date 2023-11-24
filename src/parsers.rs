@@ -1,7 +1,7 @@
 use core::panic;
 use std::vec;
 
-use rayon::prelude::{IntoParallelIterator, ParallelIterator};
+use rayon::prelude::{IntoParallelIterator, IntoParallelRefMutIterator, ParallelIterator};
 
 use crate::lexer::{Oper, Punct, Token, Type};
 
@@ -69,6 +69,7 @@ pub fn parse_interfaces(mut tokens: Vec<Token>) -> Vec<Entry> {
                     Type::Symbol => tokens[i] = Token::Key("symbol".to_string()),
                     Type::BigInt => tokens[i] = Token::Key("bigint".to_string()),
                     Type::Any => tokens[i] = Token::Key("any".to_string()),
+                    Type::Unknown => tokens[i] = Token::Key("unknown".to_string()),
                     Type::Function => tokens[i] = Token::Key("Function".to_string()),
                     _ => has_matched = false,
                 },
@@ -78,6 +79,30 @@ pub fn parse_interfaces(mut tokens: Vec<Token>) -> Vec<Entry> {
             if has_matched {
                 tokens.insert(i, Token::EOE);
                 i += 1;
+            }
+        }
+        i += 1;
+    }
+
+    tokens = tokens
+        .into_par_iter()
+        .filter(|i| {
+            if let Token::Type(Type::Any) | Token::Type(Type::Unknown) = i {
+                false
+            } else {
+                true
+            }
+        })
+        .collect();
+
+    let mut i = 0;
+    while i < tokens.len() - 1 {
+        if let Token::Type(Type::Oper(Oper::Or)) | Token::Type(Type::Oper(Oper::And)) = tokens[i] {
+            if let Token::Type(Type::Oper(Oper::Or)) | Token::Type(Type::Oper(Oper::And)) = tokens[i + 1] {
+                tokens.remove(i);
+                if i > 0 {
+                    i -= 1;
+                }
             }
         }
         i += 1;
@@ -195,7 +220,7 @@ pub fn parse_interfaces(mut tokens: Vec<Token>) -> Vec<Entry> {
                 stack_handle_remove(&mut stack);
             }
             Token::Type(_type) => add_type_value_to_last(&mut stack, _type),
-            Token::String(str) => add_type_value_to_last(&mut stack, &Type::StringLit(str.to_string())),
+            Token::String(str) => add_type_value_to_last(&mut stack, &Type::StringLit(str.clone())),
             Token::Id(id) => add_type_value_to_last(&mut stack, &Type::Custom(id.to_string())),
             _ => (),
         }
