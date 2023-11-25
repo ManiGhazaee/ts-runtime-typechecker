@@ -1,12 +1,48 @@
 # Typescript Runtime Typechecker
 
+## Features
+
+- Typescript common types: 
+  - [x] `string` | `number` | `boolean` | `true` | `false`
+  - [x] `undefined` | `null` | `unknown` | `any`
+  - [x] `object` | `symbol` | `bigint` 
+- Javascript primitives:
+  - [x] string e.g. `"str"`
+  - [x] number e.g. `12_000`
+  - [x] `null`
+  - [ ] `symbol("foo")`
+- Arrays:
+  - [x] `T[]`
+  - [x] `Array<T>`
+- Tuples:
+  - [x] `[T, U, P,...]`
+- Operators:
+  - [x] `|`
+  - [x] `&`
+- Generics or other types: 
+  - [x] `Array<T>`
+  - [x] `Function`
+  - [ ] anything else
+- Keywords:
+  - [x] `interface`
+  - [ ] `type`
+  - [ ] `keyof`
+  - [ ] `typeof`
+  - [ ] `extends`
+  - [ ] `implements`
+- [x] Interface declration merging 
+- [ ] Function types: e.g. `() => void` | `(): void`
+- [ ] Indexed access types: e.g. `Foo["bar"]` 
+- [ ] Conditional types: e.g. `RegExp extends Foo ? number : string` 
+- [ ] Mapped types: e.g. `[key: string]: boolean;` 
+- [ ] Typescript utility types: e.g. `Required<T>` 
 
 ## Examples
 
 ```typescript
 interface Foo {
     foo: string | number;
-    bar: "str" | ""; 
+    bar: "str" | "";
     foobar: 0 | 100_000;
     baz: number[] | null | undefined;
     qux: {
@@ -14,11 +50,11 @@ interface Foo {
         boo: (number | "str")[][];
         foobaz: object;
         barbaz: [bigint, unknown, symbol];
-    }
+    };
 }
 ```
 
-```typescript 
+```typescript
 export function isFoo(o: unknown): o is Foo {
     return (
         o != null &&
