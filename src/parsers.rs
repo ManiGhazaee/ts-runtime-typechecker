@@ -1,7 +1,7 @@
 use core::panic;
 use std::vec;
 
-use rayon::prelude::{IntoParallelIterator, IntoParallelRefMutIterator, ParallelIterator};
+use rayon::prelude::{IntoParallelIterator, ParallelIterator};
 
 use crate::lexer::{Oper, Punct, Token, Type};
 

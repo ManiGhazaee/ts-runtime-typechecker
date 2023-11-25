@@ -35,7 +35,7 @@ interface _3_1 {
     _0: "str" | 0 | null;
 }
 interface _3_2 {
-    _0: string | number | symbol | bigint | false | true | boolean | any | undefined | null | object | unknown;
+    _0: string | number | symbol | bigint | false | true | boolean | any | undefined | null | object | unknown; 
 }
 
 interface _3 {
