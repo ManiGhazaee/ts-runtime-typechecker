@@ -41,3 +41,16 @@ interface _3_2 {
 interface _3 {
     _0: _3_1 ;
 }
+
+interface Foo {
+    foo: string | number;
+    bar: "str" | ""; 
+    foobar: 0 | 100_000;
+    baz: number[] | null | undefined;
+    qux: {
+        faz: Array<number>;
+        boo: (number | "str")[][];
+        foobaz: object;
+        barbaz: [bigint, unknown, symbol];
+    }
+}
