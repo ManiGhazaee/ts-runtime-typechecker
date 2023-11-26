@@ -1,39 +1,44 @@
 # Typescript Runtime Typechecker
 
-## Features
+A trans-compiler that generates typechecker functions (`(o: unknown) => o is T`) and writes them at the given path as `.js` or `.ts` file based on interfaces in a given typescript file.
 
-All the features supported inside interfaces:
+# Usage
 
-- Typescript common types: 
-  - [x] `string` | `number` | `boolean` | `true` | `false`
-  - [x] `undefined` | `null` | `unknown` | `any`
-  - [x] `object` | `symbol` | `bigint` 
-- Javascript primitives:
-  - [x] string e.g. `"str"`
-  - [x] number e.g. `12_000`
-- Arrays:
-  - [x] `T[]`
-  - [x] `Array<T>`
-- Tuples:
-  - [x] `[T, U, P,...]`
-- Operators:
-  - [x] `|`
-  - [x] `&`
-- Generics or other types: 
-  - [x] `Array<T>`
-  - [x] `Function`
-  - [ ] anything else
-- Keywords:
-  - [ ] `keyof`
-  - [ ] `typeof`
-  - [ ] `extends`
-  - [ ] `implements`
-- [x] Interface declration merging 
-- [ ] Function types: e.g. `() => void`
-- [ ] Indexed access types: e.g. `Foo["bar"]` 
-- [ ] Conditional types: e.g. `RegExp extends Foo ? number : string` 
-- [ ] Mapped types: e.g. `[key: string]: boolean;` 
-- [ ] Typescript utility types: e.g. `Required<T>` 
+```bash
+ts-runtime-typechecker <READ-FILE-PATH> <WRITE-FILE-PATH>
+```
+
+# Features
+
+## Supported:
+-   Typescript common types:
+    -   `string` | `number` | `boolean` | `true` | `false`
+    -   `undefined` | `null` | `unknown` | `any`
+    -   `object` | `symbol` | `bigint`
+-   Javascript primitives:
+    -   string e.g. `"str"`
+    -   number e.g. `12_000`
+-   Arrays:
+    -   `T[]`
+    -   `Array<T>`
+-   Tuples:
+    -   `[T, U, P,...]`
+-   Operators:
+    -   `|`
+    -   `&`
+-   Generics or other types:
+    -   `Array<T>`
+    -   `Function`
+-   Interface declration merging
+
+## Not Yet Supported:
+
+-   Function types: e.g. `() => void`
+-   Indexed access types: e.g. `Foo["bar"]`
+-   Conditional types: e.g. `RegExp extends Foo ? number : string`
+-   Mapped types: e.g. `[key: string]: boolean;`
+-   Typescript utility types: e.g. `Required<T>`
+-   Some keywords: e.g. `keyof` | `typeof` | `extends` | `implements`
 
 ## Examples
 

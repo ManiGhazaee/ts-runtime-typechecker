@@ -29,4 +29,4 @@ pub fn get_extension(file_path: String) -> Extension {
     }
 }
 
-pub const USAGE: &str = "USAGE: ts-runtime-tc-gen <READ-FILE-PATH> <WRITE-FILE-PATH>";
+pub const USAGE: &str = "USAGE: ts-runtime-typechecker <READ-FILE-PATH> <WRITE-FILE-PATH>";
