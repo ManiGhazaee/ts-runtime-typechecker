@@ -84,29 +84,29 @@ pub fn parse_interfaces(mut tokens: Vec<Token>) -> Vec<Entry> {
         i += 1;
     }
 
-    tokens = tokens
-        .into_par_iter()
-        .filter(|i| {
-            if let Token::Type(Type::Any) | Token::Type(Type::Unknown) = i {
-                false
-            } else {
-                true
-            }
-        })
-        .collect();
-
-    let mut i = 0;
-    while i < tokens.len() - 1 {
-        if let Token::Type(Type::Oper(Oper::Or)) | Token::Type(Type::Oper(Oper::And)) = tokens[i] {
-            if let Token::Type(Type::Oper(Oper::Or)) | Token::Type(Type::Oper(Oper::And)) = tokens[i + 1] {
-                tokens.remove(i);
-                if i > 0 {
-                    i -= 1;
-                }
-            }
-        }
-        i += 1;
-    }
+    // REMOVE UNKOWN AND ANY: 
+    // tokens = tokens
+    //     .into_par_iter()
+    //     .filter(|i| {
+    //         if let Token::Type(Type::Any) | Token::Type(Type::Unknown) = i {
+    //             false
+    //         } else {
+    //             true
+    //         }
+    //     })
+    //     .collect();
+    // let mut i = 0;
+    // while i < tokens.len() - 1 {
+    //     if let Token::Type(Type::Oper(Oper::Or)) | Token::Type(Type::Oper(Oper::And)) = tokens[i] {
+    //         if let Token::Type(Type::Oper(Oper::Or)) | Token::Type(Type::Oper(Oper::And)) = tokens[i + 1] {
+    //             tokens.remove(i);
+    //             if i > 0 {
+    //                 i -= 1;
+    //             }
+    //         }
+    //     }
+    //     i += 1;
+    // }
 
     let mut i = 1;
     while i < tokens.len() {

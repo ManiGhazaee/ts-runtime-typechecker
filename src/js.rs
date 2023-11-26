@@ -233,11 +233,31 @@ pub fn to_js_token(value: Value, addr: Vec<String>) -> Vec<JSToken> {
         Value::Type(Type::False) => return strict_eq(JSToken::Addr(addr), JSToken::False),
         Value::Type(Type::True) => return strict_eq(JSToken::Addr(addr), JSToken::True),
         Value::Type(Type::Null) => return strict_eq(JSToken::Addr(addr), JSToken::Null),
-        Value::Type(Type::Any) => return vec![JSToken::True],
-        Value::Type(Type::Unknown) => return vec![JSToken::True],
         Value::Type(Type::StringLit(str)) => return strict_eq(JSToken::Addr(addr), JSToken::String(str)),
         Value::Type(Type::NumberLit(str)) => return strict_eq(JSToken::Addr(addr), JSToken::Number(str)),
         Value::Type(Type::Custom(_)) => typeof_token(addr, JSType::Object),
+        Value::Type(Type::Any) | Value::Type(Type::Unknown) => {
+            return [
+                vec![JSToken::LPar],
+                typeof_token(addr.clone(), JSType::Object),
+                vec![JSToken::Or],
+                typeof_token(addr.clone(), JSType::Undefined),
+                vec![JSToken::Or],
+                typeof_token(addr.clone(), JSType::String),
+                vec![JSToken::Or],
+                typeof_token(addr.clone(), JSType::Number),
+                vec![JSToken::Or],
+                typeof_token(addr.clone(), JSType::Boolean),
+                vec![JSToken::Or],
+                typeof_token(addr.clone(), JSType::Symbol),
+                vec![JSToken::Or],
+                typeof_token(addr.clone(), JSType::BigInt),
+                vec![JSToken::Or],
+                typeof_token(addr.clone(), JSType::Function),
+                vec![JSToken::RPar],
+            ]
+            .concat()
+        }
         _ => vec![JSToken::None],
     }
 }

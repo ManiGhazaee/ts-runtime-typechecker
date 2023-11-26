@@ -2,6 +2,8 @@
 
 ## Features
 
+All the features supported inside interfaces:
+
 - Typescript common types: 
   - [x] `string` | `number` | `boolean` | `true` | `false`
   - [x] `undefined` | `null` | `unknown` | `any`
@@ -9,8 +11,6 @@
 - Javascript primitives:
   - [x] string e.g. `"str"`
   - [x] number e.g. `12_000`
-  - [x] `null`
-  - [ ] `symbol("foo")`
 - Arrays:
   - [x] `T[]`
   - [x] `Array<T>`
@@ -24,14 +24,12 @@
   - [x] `Function`
   - [ ] anything else
 - Keywords:
-  - [x] `interface`
-  - [ ] `type`
   - [ ] `keyof`
   - [ ] `typeof`
   - [ ] `extends`
   - [ ] `implements`
 - [x] Interface declration merging 
-- [ ] Function types: e.g. `() => void` | `(): void`
+- [ ] Function types: e.g. `() => void`
 - [ ] Indexed access types: e.g. `Foo["bar"]` 
 - [ ] Conditional types: e.g. `RegExp extends Foo ? number : string` 
 - [ ] Mapped types: e.g. `[key: string]: boolean;` 
@@ -49,7 +47,7 @@ interface Foo {
         faz: Array<number>;
         boo: (number | "str")[][];
         foobaz: object;
-        barbaz: [bigint, unknown, symbol];
+        barbaz: [bigint, symbol];
     };
 }
 ```
