@@ -83,7 +83,6 @@ pub fn to_js_token(value: Value, addr: Vec<String>) -> Vec<JSToken> {
                     .value
                     .par_iter()
                     .map(|val| to_js_token(val.clone(), new_addr.clone()))
-                    .into_par_iter()
                     .flatten()
                     .collect();
                 let res = [
@@ -100,7 +99,6 @@ pub fn to_js_token(value: Value, addr: Vec<String>) -> Vec<JSToken> {
                     .value
                     .par_iter()
                     .map(|val| to_js_token(val.clone(), new_addr.clone()))
-                    .into_par_iter()
                     .flatten()
                     .collect();
                 let res = [
@@ -129,7 +127,6 @@ pub fn to_js_token(value: Value, addr: Vec<String>) -> Vec<JSToken> {
                         .value
                         .par_iter()
                         .map(|val| to_js_token(val.clone(), new_addr.clone()))
-                        .into_par_iter()
                         .flatten()
                         .collect();
                     let res = [
@@ -159,7 +156,6 @@ pub fn to_js_token(value: Value, addr: Vec<String>) -> Vec<JSToken> {
                     .value
                     .par_iter()
                     .map(|val| to_js_token(val.clone(), addr.clone()))
-                    .into_par_iter()
                     .flatten()
                     .collect();
                 let res = [
@@ -183,7 +179,6 @@ pub fn to_js_token(value: Value, addr: Vec<String>) -> Vec<JSToken> {
                     .value
                     .par_iter()
                     .map(|val| to_js_token(val.clone(), addr.clone()))
-                    .into_par_iter()
                     .flatten()
                     .collect();
 

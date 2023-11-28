@@ -56,7 +56,6 @@ pub enum Punct {
     RBrack,
     LPar,
     RPar,
-    // Comma,
     LAngleB,
     RAngleB,
 }
@@ -211,7 +210,6 @@ pub fn tokenize(src: String) -> Vec<Token> {
             '-' => Token::Dash,
             '<' => Token::Type(Type::Punct(Punct::LAngleB)),
             '>' => Token::Type(Type::Punct(Punct::RAngleB)),
-            // ',' => Token::Type(Type::Punct(Punct::Comma)),
             '(' => Token::Type(Type::Punct(Punct::LPar)),
             ')' => Token::Type(Type::Punct(Punct::RPar)),
             '[' => Token::Type(Type::Punct(Punct::LBrack)),
