@@ -1,4 +1,4 @@
-use std::env;
+use std::{env, process};
 
 #[derive(Copy, Clone)]
 pub enum Extension {
@@ -13,7 +13,7 @@ pub fn input() -> (String, String, Extension) {
         (f.clone(), w.clone(), get_extension(w.clone()))
     } else {
         eprintln!("{}", USAGE);
-        panic!();
+        process::exit(0);
     }
 }
 

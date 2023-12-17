@@ -579,7 +579,7 @@ pub fn merge_interfaces(interfaces: &mut Vec<Entry>) {
         let current_name = if let Key::Name(str) = &interfaces[i].key {
             str.clone()
         } else {
-            panic!("Not possible");
+            unreachable!()
         };
         let mut j = i + 1;
         while j < interfaces.len() {
@@ -593,7 +593,7 @@ pub fn merge_interfaces(interfaces: &mut Vec<Entry>) {
                     j -= 1;
                 }
             } else {
-                panic!("Not possible too");
+                unreachable!()
             }
             j += 1;
         }
