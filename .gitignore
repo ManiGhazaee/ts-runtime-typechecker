@@ -3,3 +3,5 @@ test.txt
 result.js
 result.ts
 perf.ts
+/builds
+dbg.ts
