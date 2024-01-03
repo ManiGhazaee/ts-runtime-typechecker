@@ -14,9 +14,13 @@
         "test": "echo \"Error: no test specified\" && exit 1"
     },
     "keywords": [
-        "TypeScript",
-        "JavaScript",
-        "TypeChecker"
+        "typescript",
+        "javascript",
+        "cli",
+        "runtime",
+        "ts",
+        "js",
+        "typechecker"
     ],
     "author": "ManiGhazaee <hosseinghazaee1@gmail.com>",
     "license": "GPL-3.0",
