@@ -2,45 +2,62 @@
 
 A trans-compiler that generates typechecker functions (`(o: unknown) => o is T`) and writes them at the given path as `.js` or `.ts` file based on interfaces in a given typescript file.
 
-# Usage
+## Installation
+
+Install the package globally with npm:
+
+```bash
+npm install --global ts-runtime-typechecker 
+```
+
+Or install with cargo:
+
+```bash
+cargo install ts-runtime-typechecker 
+```
+
+## Usage
 
 ```bash
 ts-runtime-typechecker <READ-FILE-PATH> <WRITE-FILE-PATH>
 ```
 
-# Features
+## Features
 
-## Supported:
--   Typescript common types:
-    -   `string` | `number` | `boolean` | `true` | `false`
-    -   `undefined` | `null` | `unknown` | `any`
-    -   `object` | `symbol` | `bigint`
--   Javascript primitives:
-    -   string e.g. `"str"`
-    -   number e.g. `12_000`
--   Arrays:
-    -   `T[]`
-    -   `Array<T>`
--   Tuples:
-    -   `[T, U, P,...]`
--   Operators:
-    -   `|`
-    -   `&`
--   Generics or other types:
-    -   `Array<T>`
-    -   `Function`
--   Interface declration merging
+### Supported
 
-## Not Yet Supported:
+- Typescript common types:
+  - `string` | `number` | `boolean` | `true` | `false`
+  - `undefined` | `null` | `unknown` | `any`
+  - `object` | `symbol` | `bigint`
+- Javascript primitives:
+  - string e.g. `"str"`
+  - number e.g. `12_000`
+- Arrays:
+  - `T[]`
+  - `Array<T>`
+- Tuples:
+  - `[T, U, P,...]`
+- Operators:
+  - `|`
+  - `&`
+- Generics or other types:
+  - `Array<T>`
+  - `Function`
+- Interface declration merging
 
--   Function types: e.g. `() => void`
--   Indexed access types: e.g. `Foo["bar"]`
--   Conditional types: e.g. `RegExp extends Foo ? number : string`
--   Mapped types: e.g. `[key: string]: boolean;`
--   Typescript utility types: e.g. `Required<T>`
--   Some keywords: e.g. `keyof` | `typeof` | `extends` | `implements`
+### Not Yet Supported
 
-## Examples
+- Function types: e.g. `() => void`
+- Indexed access types: e.g. `Foo["bar"]`
+- Conditional types: e.g. `RegExp extends Foo ? number : string`
+- Mapped types: e.g. `[key: string]: boolean;`
+- Typescript utility types: e.g. `Required<T>`
+- Some keywords: e.g. `keyof` | `typeof` | `extends` | `implements`
+
+## Example
+
+TypeScript interface `Foo` and the corresponding generated typechecker function `isFoo`.
 
 ```typescript
 interface Foo {
