@@ -5,3 +5,4 @@ result.ts
 perf.ts
 /builds
 dbg.ts
+/node_modules
