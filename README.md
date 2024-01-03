@@ -1,6 +1,6 @@
 # Typescript Runtime Typechecker
 
-A trans-compiler that generates typechecker functions (`(o: unknown) => o is T`) and writes them at the given path as `.js` or `.ts` file based on interfaces in a given typescript file.
+A command line tool that generates TypeScript runtime typechecker functions based on interfaces in a given TypeScript file. These typechecker functions can be utilized to validate the structure and types of objects at runtime, enhancing type safety in your TypeScript projects.
 
 ## Installation
 
@@ -18,8 +18,10 @@ cargo install ts-runtime-typechecker
 
 ## Usage
 
+Run the tool by providing the path to the input TypeScript file and the desired output file path:
+
 ```bash
-ts-runtime-typechecker <READ-FILE-PATH> <WRITE-FILE-PATH>
+ts-runtime-typechecker <INPUT-FILE-PATH> <OUTPUT-FILE-PATH>
 ```
 
 ## Features
@@ -111,3 +113,7 @@ export function isFoo(o: unknown): o is Foo {
     );
 }
 ```
+
+## License
+
+This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](./LICENSE.md) file for details.

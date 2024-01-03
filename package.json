@@ -1,8 +1,7 @@
 {
     "name": "ts-runtime-typechecker",
     "version": "0.1.0",
-    "description": "A trans-compiler that generates typechecker functions (`(o: unknown) => o is T`) and writes them at the given path as `.js` or `.ts` file based on interfaces in a given typescript file.",
-    "main": "index.js",
+    "description": "Generates ts/js typechecker functions from typescript types",
     "files": [
         "npm/**/*"
     ],
@@ -14,9 +13,13 @@
         "postinstall": "node npm/script.js install",
         "test": "echo \"Error: no test specified\" && exit 1"
     },
-    "keywords": ["TypeScript", "JavaScript", "TypeChecker"],
+    "keywords": [
+        "TypeScript",
+        "JavaScript",
+        "TypeChecker"
+    ],
     "author": "ManiGhazaee <hosseinghazaee1@gmail.com>",
-    "license": "ISC",
+    "license": "GPL-3.0",
     "dependencies": {
         "binary-install": "^1.1.0"
     }
