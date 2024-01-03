@@ -1,7 +1,7 @@
 {
     "name": "ts-runtime-typechecker",
     "version": "0.1.1",
-    "description": "Generates ts/js typechecker functions from typescript types",
+    "description": "A command line tool that generates ts/js typechecker functions from typescript types",
     "files": [
         "npm/**/*"
     ],
