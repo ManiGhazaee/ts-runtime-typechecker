@@ -23,7 +23,7 @@
     "author": "ManiGhazaee <hosseinghazaee1@gmail.com>",
     "license": "GPL-3.0",
     "dependencies": {
-        "binary-install": "^1.1.0"
+        "binary-install": "^0.0.1"
     },
     "files": [
         "npm/**/*"
