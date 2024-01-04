@@ -1,6 +1,6 @@
 {
     "name": "ts-runtime-typechecker",
-    "version": "0.1.2",
+    "version": "0.1.3",
     "description": "A command line tool that generates ts/js typechecker functions from typescript types",
     "repository": "https://github.com/ManiGhazaee/ts-runtime-typechecker.git",
     "bin": {
