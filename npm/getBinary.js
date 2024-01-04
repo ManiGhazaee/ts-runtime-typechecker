@@ -19,8 +19,7 @@ function getBinary() {
     const platform = getPlatform();
     const url = `https://github.com/ManiGhazaee/ts-runtime-typechecker/releases/download/v${version}/ts-runtime-typechecker-${platform}.tar.gz`;
     console.log(url);
-    const name = "ts-runtime-typechecker";
-    return new Binary(url, { name });
+    return new Binary("ts-runtime-typechecker", url);
 }
 
 module.exports = getBinary;
