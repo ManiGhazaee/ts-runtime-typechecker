@@ -62,6 +62,7 @@ ts-runtime-typechecker <INPUT-FILE-PATH> <OUTPUT-FILE-PATH>
 TypeScript interface `Foo` and the corresponding generated typechecker function `isFoo`.
 
 ```typescript
+// input file:
 interface Foo {
     foo: string | number;
     bar: "str" | "";
@@ -77,6 +78,7 @@ interface Foo {
 ```
 
 ```typescript
+// output file:
 export function isFoo(o: unknown): o is Foo {
     return (
         o != null &&
@@ -110,6 +112,57 @@ export function isFoo(o: unknown): o is Foo {
         o["qux"]["barbaz"].length === 2 &&
         typeof o["qux"]["barbaz"]["0"] === "bigint" &&
         typeof o["qux"]["barbaz"]["1"] === "symbol"
+    );
+}
+```
+
+___
+
+TypeScript interfaces `Bar`, `Baz` and the corresponding generated typechecker functions `isBar`, `isBaz`.
+
+```typescript
+// input file:
+interface Bar {
+    foo: number | Baz;
+}
+
+interface Baz {
+    foo: string;
+}
+
+interface Bar {
+    bar: [Baz]
+}
+```
+
+```typescript
+// output file:
+export function isBar(o: unknown): o is Bar {
+    return (
+        o != null &&
+        typeof o === "object" &&
+        Object.keys(o).length === 2 &&
+        "foo" in o &&
+        (typeof o["foo"] === "number" ||
+            (typeof o["foo"] === "object" &&
+                o["foo"] != null &&
+                Object.keys(o["foo"]).length === 1 &&
+                "foo" in o["foo"] &&
+                typeof o["foo"]["foo"] === "string")) &&
+        "bar" in o &&
+        Array.isArray(o["bar"]) &&
+        o["bar"].length === 1 &&
+        typeof o["bar"]["0"] === "object" &&
+        o["bar"]["0"] != null &&
+        Object.keys(o["bar"]["0"]).length === 1 &&
+        "foo" in o["bar"]["0"] &&
+        typeof o["bar"]["0"]["foo"] === "string"
+    );
+}
+
+export function isBaz(o: unknown): o is Baz {
+    return (
+        o != null && typeof o === "object" && Object.keys(o).length === 1 && "foo" in o && typeof o["foo"] === "string"
     );
 }
 ```
