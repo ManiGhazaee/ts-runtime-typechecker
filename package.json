@@ -26,6 +26,6 @@
         "binary-install": "^0.0.1"
     },
     "files": [
-        "npm/**/*"
+        "npm"
     ]
 }
