@@ -7,7 +7,7 @@
         "ts-runtime-typechecker": "npm/run.js"
     },
     "scripts": {
-        "preinstall": "node npm/scripts.js uninstall",
+        // "preinstall": "node npm/scripts.js uninstall",
         "postinstall": "node npm/scripts.js install",
         "test": "echo \"Error: no test specified\" && exit 1"
     },
