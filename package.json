@@ -3,15 +3,12 @@
     "version": "0.1.2",
     "description": "A command line tool that generates ts/js typechecker functions from typescript types",
     "repository": "https://github.com/ManiGhazaee/ts-runtime-typechecker.git",
-    "files": [
-        "npm/**/*"
-    ],
     "bin": {
-        "ts-runtime-typechecker": "./npm/run.js"
+        "ts-runtime-typechecker": "npm/run.js"
     },
     "scripts": {
-        "preinstall": "node npm/script.js uninstall",
-        "postinstall": "node npm/script.js install",
+        "preinstall": "node npm/scripts.js uninstall",
+        "postinstall": "node npm/scripts.js install",
         "test": "echo \"Error: no test specified\" && exit 1"
     },
     "keywords": [
@@ -27,5 +24,8 @@
     "license": "GPL-3.0",
     "dependencies": {
         "binary-install": "^1.1.0"
-    }
+    },
+    "files": [
+        "npm/**/*"
+    ]
 }
