@@ -4,13 +4,13 @@ A command line tool that generates TypeScript runtime typechecker functions base
 
 ## Installation
 
-Install the package globally with npm:
+<!-- Install the package globally with npm:
 
 ```bash
 npm install --global ts-runtime-typechecker 
-```
+``` -->
 
-Or install with cargo:
+<!-- Or --> install with cargo:
 
 ```bash
 cargo install ts-runtime-typechecker 
