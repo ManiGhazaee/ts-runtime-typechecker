@@ -1,6 +1,6 @@
 [package]
 name = "ts-runtime-typechecker"
-version = "0.1.1"
+version = "0.1.6"
 repository = "https://github.com/ManiGhazaee/ts-runtime-typechecker"
 authors = ["ManiGhazaee <hosseinghazaee1@gmail.com>"]
 edition = "2021"
