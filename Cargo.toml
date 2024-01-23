@@ -12,9 +12,7 @@ keywords = [
     "typescript",
     "javascript",
     "cli",
-    "runtime",
     "ts",
-    "js",
     "typechecker",
 ]
 
